@@ -77,6 +77,7 @@ set(
     SOURCE_FILES
     ${SOURCE_DIR}/app.cpp
     ${SOURCE_DIR}/atom.cpp
+    ${SOURCE_DIR}/bond.cpp
     ${SOURCE_DIR}/main.cpp
 )
 
