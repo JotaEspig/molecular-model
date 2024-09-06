@@ -100,10 +100,10 @@ void App::main_loop() {
 
     // Create bonds
     for (int i = 0; i < 6; ++i) {
-        Bond::Type type = (i % 2) ? Bond::Type::Double : Bond::Type::Singular;
+        Bond::Type type = (i % 2) ? Bond::Type::DOUBLE : Bond::Type::SINGULAR;
 
         add_bond(carbons[i], carbons[(i + 1) % 6], type);
-        add_bond(carbons[i], hydrogens[i], Bond::Type::Singular);
+        add_bond(carbons[i], hydrogens[i], Bond::Type::SINGULAR);
     }
 
     double last_time = get_time();

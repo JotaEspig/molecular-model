@@ -12,16 +12,16 @@ public:
     /// @brief Bond type
     enum class Type {
         /// @brief singular bond
-        Singular,
+        SINGULAR,
 
         /// @brief double bond
-        Double,
+        DOUBLE,
 
         /// @brief triple bond
-        Triple,
+        TRIPLE,
 
         /// @brief quadruple bond
-        Quadruple,
+        QUADRUPLE,
     };
 
     /// @brief Default constructor
@@ -56,7 +56,7 @@ private:
     std::shared_ptr<Atom> b;
 
     /// @brief Bond type
-    Type type = Type::Singular;
+    Type type = Type::SINGULAR;
 
     /// @brief Default bond thickness
     static constexpr float thickness = 0.15f;

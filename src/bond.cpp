@@ -2,10 +2,13 @@
 
 #include "bond.hpp"
 
-Bond::Bond(const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b)
-    : Line::Line{glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, 1.0f, thickness, color},
-      a{a},
-      b{b} {}
+Bond::Bond(const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b) :
+  Line::Line{
+      glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, 1.0f, thickness, color
+  },
+  a{a},
+  b{b} {
+}
 
 void Bond::set_type(Type type) {
     Bond::type = type;
@@ -14,7 +17,6 @@ void Bond::set_type(Type type) {
 Bond::Type Bond::get_type() {
     return type;
 }
-
 
 void Bond::update(double dt) {
     // Set start to atom A's position
@@ -33,20 +35,20 @@ void Bond::update(double dt) {
 
 void Bond::draw() {
     switch (type) {
-        case Type::Singular:
-            _drawSingularBond();
-            break;
-        case Type::Double:
-            _drawDoubleBond();
-            break;
-        case Type::Triple:
-            _drawTripleBond();
-            break;
-        case Type::Quadruple:
-            _drawQuadrupleBond();
-            break;
-        default:
-            return;
+    case Type::SINGULAR:
+        _drawSingularBond();
+        break;
+    case Type::DOUBLE:
+        _drawDoubleBond();
+        break;
+    case Type::TRIPLE:
+        _drawTripleBond();
+        break;
+    case Type::QUADRUPLE:
+        _drawQuadrupleBond();
+        break;
+    default:
+        return;
     }
 }
 
