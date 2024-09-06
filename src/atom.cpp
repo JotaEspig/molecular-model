@@ -1,3 +1,5 @@
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "atom.hpp"
 
 #include "axolote/window.hpp"
@@ -5,7 +7,11 @@
 std::shared_ptr<axolote::GModel> Atom::_gmodel = nullptr;
 std::shared_ptr<axolote::gl::Shader> Atom::_shader = nullptr;
 
-Atom::Atom() {
+Atom::Atom() :
+  Atom(glm::vec4{1.0f}) {}
+
+Atom::Atom(glm::vec4 color, float scale) :
+  color{color} {
     if (_gmodel == nullptr) {
         _gmodel = std::make_shared<axolote::GModel>(
             axolote::Window::get_path("resources/models/sphere.obj")
@@ -26,11 +32,8 @@ Atom::Atom() {
     is_transparent = false;
     gmodel = _gmodel;
     bind_shader(_shader);
-    set_matrix(glm::mat4{1.0f});
-}
+    set_matrix(glm::scale(glm::mat4{1.0f}, glm::vec3{scale}));
 
-Atom::Atom(glm::vec4 color) :
-  Atom() {
     Atom::color = color;
 }
 

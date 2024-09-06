@@ -19,6 +19,9 @@ public:
 
         /// @brief triple bond
         Triple,
+
+        /// @brief quadruple bond
+        Quadruple,
     };
 
     /// @brief Default constructor
@@ -44,6 +47,7 @@ private:
     void _drawSingularBond();
     void _drawDoubleBond();
     void _drawTripleBond();
+    void _drawQuadrupleBond();
 
     /// @brief pointer to first atom
     std::shared_ptr<Atom> a;
@@ -58,5 +62,5 @@ private:
     static constexpr float thickness = 0.15f;
 
     /// @brief Default bond color
-    static constexpr glm::vec4 color = glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
+    static constexpr glm::vec4 color = glm::vec4{1.0f};
 };

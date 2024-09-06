@@ -42,6 +42,9 @@ void Bond::draw() {
         case Type::Triple:
             _drawTripleBond();
             break;
+        case Type::Quadruple:
+            _drawQuadrupleBond();
+            break;
         default:
             return;
     }
@@ -51,17 +54,125 @@ void Bond::_drawSingularBond() {
     // Just draw at current position
     Line::draw();
 }
+
 void Bond::_drawDoubleBond() {
     // Save current start and end
-    // glm::vec3 original_start = start;
-    // glm::vec3 original_end = get_end();
+    glm::vec3 original_start = start;
+    glm::vec3 original_end = get_end();
 
-    // TODO: Displace to both sides by half right vector and render with half thickness, then change back to original start-end
+    // Get right vector
+    glm::vec3 right = glm::cross(dir_vec, glm::vec3{0.0f, 1.0f, 0.0f});
+    if (glm::dot(right, right) == 0.0f) {
+        // dir_vec is straight up
+        right = glm::cross(dir_vec, glm::vec3{0.0f, 0.0f, -1.0f});
+    }
+    right = glm::normalize(right);
+
+    // Dispĺace left
+    const float displacement = 0.4f;
+    glm::vec3 displacement_left = -right * displacement;
+    start = original_start + displacement_left;
+    set_end(original_end + displacement_left);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Displace right
+    glm::vec3 displacement_right = right * displacement;
+    start = original_start + displacement_right;
+    set_end(original_end + displacement_right);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Restore start and end
+    start = original_start;
+    set_end(original_end);
 }
+
 void Bond::_drawTripleBond() {
     // Save current start and end
-    // glm::vec3 original_start = start;
-    // glm::vec3 original_end = get_end();
+    glm::vec3 original_start = start;
+    glm::vec3 original_end = get_end();
 
-    // TODO: Render three times displacing based on right and up vectors
+    // Get right and up vector
+    glm::vec3 right = glm::cross(dir_vec, glm::vec3{0.0f, 1.0f, 0.0f});
+    if (glm::dot(right, right) == 0.0f) {
+        // dir_vec is straight up
+        right = glm::cross(dir_vec, glm::vec3{0.0f, 0.0f, -1.0f});
+    }
+    right = glm::normalize(right);
+    glm::vec3 up = glm::normalize(glm::cross(right, dir_vec)) * 0.866f;
+
+    // Dispĺace up
+    const float displacement = 0.4f;
+    glm::vec3 displacement_up = up * displacement;
+    start = original_start + displacement_up;
+    set_end(original_end + displacement_up);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Displace bottom left
+    glm::vec3 displacement_bot_left = (-up - right) * displacement;
+    start = original_start + displacement_bot_left;
+    set_end(original_end + displacement_bot_left);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Displace bottom right
+    glm::vec3 displacement_bot_right = (-up + right) * displacement;
+    start = original_start + displacement_bot_right;
+    set_end(original_end + displacement_bot_right);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Restore start and end
+    start = original_start;
+    set_end(original_end);
+}
+
+void Bond::_drawQuadrupleBond() {
+    // Save current start and end
+    glm::vec3 original_start = start;
+    glm::vec3 original_end = get_end();
+
+    // Get right and up vector
+    glm::vec3 right = glm::cross(dir_vec, glm::vec3{0.0f, 1.0f, 0.0f});
+    if (glm::dot(right, right) == 0.0f) {
+        // dir_vec is straight up
+        right = glm::cross(dir_vec, glm::vec3{0.0f, 0.0f, -1.0f});
+    }
+    right = glm::normalize(right);
+    glm::vec3 up = glm::normalize(glm::cross(right, dir_vec));
+
+    // Displace bottom left
+    const float displacement = 0.4f;
+    glm::vec3 displacement_bot_left = (-up - right) * displacement;
+    start = original_start + displacement_bot_left;
+    set_end(original_end + displacement_bot_left);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Displace bottom right
+    glm::vec3 displacement_bot_right = (-up + right) * displacement;
+    start = original_start + displacement_bot_right;
+    set_end(original_end + displacement_bot_right);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Dispĺace top left
+    glm::vec3 displacement_top_left = (up - right) * displacement;
+    start = original_start + displacement_top_left;
+    set_end(original_end + displacement_top_left);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Dispĺace top right
+    glm::vec3 displacement_top_right = (up + right) * displacement;
+    start = original_start + displacement_top_right;
+    set_end(original_end + displacement_top_right);
+    Line::update(0.0f);
+    Line::draw();
+
+    // Restore start and end
+    start = original_start;
+    set_end(original_end);
 }

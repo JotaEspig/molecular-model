@@ -22,7 +22,7 @@ public:
     /**
      * @brief Constructor
      **/
-    Atom(glm::vec4 color);
+    Atom(glm::vec4 color, float scale = 1.0f);
 
     void draw() override;
     void draw(const glm::mat4 &mat) override;
