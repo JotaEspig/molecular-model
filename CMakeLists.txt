@@ -98,6 +98,9 @@ target_link_libraries(
     axolote
     ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB}
 )
+if (UNIX)
+    target_link_libraries(molecular-model PUBLIC stdc++)
+endif ()
 
 # Header files
 target_include_directories(
