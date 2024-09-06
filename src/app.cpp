@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "axolote/scene.hpp"
@@ -34,9 +32,10 @@ void App::process_input(double dt) {
         get_cursor_position(&mouse_x, &mouse_y);
         lon += (mouse_x - half_center_x) * dt;
         lat += (mouse_y - half_center_y) * dt;
-        lat = glm::clamp((float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
+        lat = glm::clamp(
+            (float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f
+        );
         set_cursor_position(half_center_x, half_center_y);
-        printf("lat: %.3f\n", lat);
     }
     if (get_mouse_key_state(MouseKey::RIGHT) == MouseKeyState::RELEASED) {
         set_cursor_mode(CursorMode::NORMAL);
@@ -147,8 +146,7 @@ std::shared_ptr<Atom> App::add_hydrogen(const glm::vec3 &pos) {
 }
 
 std::shared_ptr<Bond> App::add_bond(
-    const std::shared_ptr<Atom> &a,
-    const std::shared_ptr<Atom> &b,
+    const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b,
     Bond::Type type
 ) {
     auto bond = std::make_shared<Bond>(a, b);
