@@ -1,6 +1,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "axolote/scene.hpp"
+#define DEBUG
+#include "axolote/utils.hpp"
 #include "axolote/utils/grid.hpp"
 
 #include "app.hpp"
@@ -107,12 +109,18 @@ void App::main_loop() {
     }
 
     double last_time = get_time();
+    int second_counter = 0;
     while (!should_close()) {
         clear();
 
         double current_time = get_time();
         double dt = current_time - last_time;
         last_time = current_time;
+
+        if (current_time - second_counter >= 5.0) {
+            second_counter = current_time;
+            axolote::debug("FPS: %.1lf", 1.0 / dt);
+        }
 
         poll_events();
         process_input(dt);
