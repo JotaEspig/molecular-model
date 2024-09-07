@@ -36,13 +36,14 @@ set(ASSIMP_LIB assimp)
 set(ASSIMP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/external/include_assimp)
 if (NOT USE_LOCAL_ASSIMP)
     find_package(assimp CONFIG REQUIRED)
-    set(ASSIMP_LIB ${ASSIMP_LIB})
+    set(ASSIMP_LIB assimp::assimp)
 endif ()
 
 add_library(axolote SHARED IMPORTED)
 if (WIN32 OR MSVC)
     set_target_properties(axolote PROPERTIES 
         IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/external/lib/axolote/axolote.dll"
+        IMPORTED_IMPLIB "${CMAKE_SOURCE_DIR}/external/lib/axolote/axolote.lib"
     )
 else()
     set_target_properties(axolote PROPERTIES 
@@ -79,6 +80,7 @@ set(
     ${SOURCE_DIR}/atom.cpp
     ${SOURCE_DIR}/bond.cpp
     ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/utils.cpp
 )
 
 # Adding executables

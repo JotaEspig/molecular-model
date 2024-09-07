@@ -9,6 +9,13 @@
 #include "atom.hpp"
 #include "bond.hpp"
 
+#ifdef _WIN32
+double clamp(double value, double min, double max) {
+    return std::max(std::min(value, max), min);
+}
+const float M_PIf = 3.14159265358979323846f;
+#endif
+
 void App::process_input(double dt) {
     (void)dt;
     if (get_key_state(Key::ESCAPE) == KeyState::PRESSED)
@@ -34,9 +41,13 @@ void App::process_input(double dt) {
         get_cursor_position(&mouse_x, &mouse_y);
         lon += (mouse_x - half_center_x) * dt;
         lat += (mouse_y - half_center_y) * dt;
+#ifdef _WIN32
+        lat = clamp(lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
+#else
         lat = glm::clamp(
             (float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f
         );
+#endif
         set_cursor_position(half_center_x, half_center_y);
     }
     if (get_mouse_key_state(MouseKey::RIGHT) == MouseKeyState::RELEASED) {

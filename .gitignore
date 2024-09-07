@@ -1,6 +1,7 @@
 build/
 .vscode/
 axolote-engine/
+external/lib/
 
 *.so
 *.so.*
