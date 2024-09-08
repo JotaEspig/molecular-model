@@ -59,7 +59,7 @@ private:
     Type type = Type::SINGULAR;
 
     /// @brief Default bond thickness
-    static constexpr float thickness = 0.15f;
+    static constexpr float thickness = 0.3f;
 
     /// @brief Default bond color
     static constexpr glm::vec4 color = glm::vec4{1.0f};

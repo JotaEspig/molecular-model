@@ -53,8 +53,16 @@ void Bond::draw() {
 }
 
 void Bond::_drawSingularBond() {
-    // Just draw at current position
+    // Save original size
+    const float original_thickness = Bond::thickness;
+
+    // Just draw at current position with increased size to match other types
+    Line::thickness = original_thickness * 2.0f;
+    Line::update(0.0);
     Line::draw();
+
+    // Revert thickness
+    Line::thickness = original_thickness;
 }
 
 void Bond::_drawDoubleBond() {
