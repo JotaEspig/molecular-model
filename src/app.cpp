@@ -98,30 +98,25 @@ void App::main_loop() {
     const float r = 4.0f;
     const float angle_step = M_PIf / 3.0f;
 
+    auto benzene = std::make_shared<Molecule>();
     // Create carbons and hydrogens
     std::shared_ptr<Atom> carbons[6];
     std::shared_ptr<Atom> hydrogens[6];
-    auto benzene = std::make_shared<Molecule>();
-    // scene->add_drawable(benzene);
     for (int i = 0; i < 6; ++i) {
         float x = std::cos(angle_step * (float)i) * r;
         float y = std::sin(angle_step * (float)i) * r;
-
         carbons[i] = benzene->add_carbon(glm::vec3{x, 0.0f, y});
         hydrogens[i] = benzene->add_hydrogen(glm::vec3{x, 0.0f, y} * 1.5f);
-        scene->add_drawable(carbons[i]);
-        scene->add_drawable(hydrogens[i]);
     }
 
     // Create bonds
     for (int i = 0; i < 6; ++i) {
         Bond::Type type = (i % 2) ? Bond::Type::DOUBLE : Bond::Type::SINGULAR;
-
         benzene->add_bond(carbons[i], carbons[(i + 1) % 6], type);
         benzene->add_bond(carbons[i], hydrogens[i], Bond::Type::SINGULAR);
-        scene->add_drawable(benzene->bonds.back());
-        scene->add_drawable(benzene->bonds.back());
     }
+
+    scene->add_drawable(benzene);
 
     double last_time = get_time();
     int second_counter = 0;

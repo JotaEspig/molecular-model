@@ -7,7 +7,8 @@ std::shared_ptr<axolote::gl::Shader> Bond::_bond_shader = nullptr;
 
 Bond::Bond() :
   Line::Line{
-      glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, 1.0f, thickness, color
+      glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, 1.0f, thickness,
+      glm::vec4{1.0f, 1.0f, 1.0f, 1.0f}
   } {
     if (_bond_shader == nullptr) {
         _bond_shader = axolote::gl::Shader::create(

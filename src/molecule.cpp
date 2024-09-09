@@ -43,7 +43,8 @@ void Molecule::bind_shader(std::shared_ptr<axolote::gl::Shader> shader) {
     (void)shader;
 }
 
-std::vector<std::shared_ptr<axolote::gl::Shader>> Molecule::get_shaders() const {
+std::vector<std::shared_ptr<axolote::gl::Shader>>
+Molecule::get_shaders() const {
     std::vector<std::shared_ptr<axolote::gl::Shader>> shaders;
     for (auto &atom : atoms) {
         auto aux = atom->get_shaders();
