@@ -3,8 +3,6 @@
 #include "atom.hpp"
 #include "utils.hpp"
 
-#include "axolote/window.hpp"
-
 std::shared_ptr<axolote::GModel> Atom::_gmodel = nullptr;
 std::shared_ptr<axolote::gl::Shader> Atom::_shader = nullptr;
 
@@ -36,10 +34,13 @@ Atom::Atom(glm::vec4 color, float scale) :
 }
 
 void Atom::draw() {
-    get_shader()->activate();
-    get_shader()->set_uniform_float4(
-        "atom_color", color.x, color.y, color.z, color.a
-    );
+    auto shaders = get_shaders();
+    for (auto &shader : shaders) {
+        shader->activate();
+        shader->set_uniform_float4(
+            "atom_color", color.x, color.y, color.z, color.a
+        );
+    }
     axolote::Object3D::draw();
 }
 

@@ -80,6 +80,7 @@ set(
     ${SOURCE_DIR}/atom.cpp
     ${SOURCE_DIR}/bond.cpp
     ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/molecule.cpp
     ${SOURCE_DIR}/utils.cpp
 )
 

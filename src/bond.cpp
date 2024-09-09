@@ -1,13 +1,27 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "bond.hpp"
+#include "utils.hpp"
 
-Bond::Bond(const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b) :
+std::shared_ptr<axolote::gl::Shader> Bond::_bond_shader = nullptr;
+
+Bond::Bond() :
   Line::Line{
       glm::vec3{0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, 1.0f, thickness, color
-  },
-  a{a},
-  b{b} {
+  } {
+    if (_bond_shader == nullptr) {
+        _bond_shader = axolote::gl::Shader::create(
+            myget_path("resources/shaders/object3d_base_vertex_shader.glsl"),
+            myget_path("resources/shaders/object3d_base_fragment_shader.glsl")
+        );
+    }
+    bind_shader(_bond_shader);
+}
+
+Bond::Bond(const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b) :
+  Bond{} {
+    Bond::a = a;
+    Bond::b = b;
 }
 
 void Bond::set_type(Type type) {

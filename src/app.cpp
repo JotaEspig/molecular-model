@@ -8,6 +8,7 @@
 #include "app.hpp"
 #include "atom.hpp"
 #include "bond.hpp"
+#include "molecule.hpp"
 
 #ifdef _WIN32
 double clamp(double value, double min, double max) {
@@ -72,10 +73,6 @@ void App::main_loop() {
         get_path("resources/shaders/grid_base_vertex_shader.glsl"),
         get_path("resources/shaders/grid_base_fragment_shader.glsl")
     );
-    object_shader = axolote::gl::Shader::create(
-        get_path("resources/shaders/object3d_base_vertex_shader.glsl"),
-        get_path("resources/shaders/object3d_base_fragment_shader.glsl")
-    );
 
     auto scene = std::make_shared<axolote::Scene>();
     scene->camera.pos = {0.0f, 0.0f, 12.35f};
@@ -86,6 +83,7 @@ void App::main_loop() {
     auto grid = std::make_shared<axolote::utils::Grid>(
         70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
     );
+    grid->fading_factor = 70.0f;
     grid->bind_shader(grid_shader);
 
     auto dir_light = std::make_shared<axolote::DirectionalLight>(
@@ -103,20 +101,26 @@ void App::main_loop() {
     // Create carbons and hydrogens
     std::shared_ptr<Atom> carbons[6];
     std::shared_ptr<Atom> hydrogens[6];
+    auto benzene = std::make_shared<Molecule>();
+    // scene->add_drawable(benzene);
     for (int i = 0; i < 6; ++i) {
         float x = std::cos(angle_step * (float)i) * r;
         float y = std::sin(angle_step * (float)i) * r;
 
-        carbons[i] = add_carbon(glm::vec3{x, 0.0f, y});
-        hydrogens[i] = add_hydrogen(glm::vec3{x, 0.0f, y} * 1.5f);
+        carbons[i] = benzene->add_carbon(glm::vec3{x, 0.0f, y});
+        hydrogens[i] = benzene->add_hydrogen(glm::vec3{x, 0.0f, y} * 1.5f);
+        scene->add_drawable(carbons[i]);
+        scene->add_drawable(hydrogens[i]);
     }
 
     // Create bonds
     for (int i = 0; i < 6; ++i) {
         Bond::Type type = (i % 2) ? Bond::Type::DOUBLE : Bond::Type::SINGULAR;
 
-        add_bond(carbons[i], carbons[(i + 1) % 6], type);
-        add_bond(carbons[i], hydrogens[i], Bond::Type::SINGULAR);
+        benzene->add_bond(carbons[i], carbons[(i + 1) % 6], type);
+        benzene->add_bond(carbons[i], hydrogens[i], Bond::Type::SINGULAR);
+        scene->add_drawable(benzene->bonds.back());
+        scene->add_drawable(benzene->bonds.back());
     }
 
     double last_time = get_time();
@@ -142,37 +146,4 @@ void App::main_loop() {
 
         flush();
     }
-}
-
-std::shared_ptr<Atom> App::add_carbon(const glm::vec3 &pos) {
-    auto carbon = std::make_shared<Atom>(glm::vec4{0.3f, 0.3f, 0.3f, 1.0f});
-    carbon->is_affected_by_lights = true;
-    carbon->set_matrix(glm::translate(glm::mat4{1.0f}, pos));
-    current_scene()->add_drawable(carbon);
-    return carbon;
-}
-
-std::shared_ptr<Atom> App::add_hydrogen(const glm::vec3 &pos) {
-    auto hydrogen = std::make_shared<Atom>(glm::vec4{0.4f, 0.8f, 1.0f, 1.0f});
-    hydrogen->is_affected_by_lights = true;
-
-    glm::mat4 mat{1.0f};
-    mat = glm::translate(mat, pos);
-    mat = glm::scale(mat, glm::vec3{0.5f});
-    hydrogen->set_matrix(mat);
-    current_scene()->add_drawable(hydrogen);
-    return hydrogen;
-}
-
-std::shared_ptr<Bond> App::add_bond(
-    const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b,
-    Bond::Type type
-) {
-    auto bond = std::make_shared<Bond>(a, b);
-    bond->set_type(type);
-    bond->bind_shader(object_shader);
-    bond->is_affected_by_lights = true;
-    current_scene()->add_drawable(bond);
-
-    return bond;
 }

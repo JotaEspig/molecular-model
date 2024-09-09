@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "axolote/gl/shader.hpp"
 #include "axolote/utils/line.hpp"
 
 #include "atom.hpp"
@@ -25,7 +26,7 @@ public:
     };
 
     /// @brief Default constructor
-    Bond() = default;
+    Bond();
 
     /// @brief Constructor with atoms linked by this bond
     /// @param a first atom
@@ -63,4 +64,7 @@ private:
 
     /// @brief Default bond color
     static constexpr glm::vec4 color = glm::vec4{1.0f};
+
+    /// @brief Shader used to render bonds
+    static std::shared_ptr<axolote::gl::Shader> _bond_shader;
 };
