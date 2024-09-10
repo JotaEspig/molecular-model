@@ -107,10 +107,7 @@ void App::main_loop() {
     set_scene(scene);
 
     // Construct methane
-    glm::mat4 methane_mat{1.0f};
-    methane_mat = glm::rotate(methane_mat, glm::radians(45.0f), glm::vec3{1.0f, 0.0f, 0.0f});
-    methane_mat = glm::rotate(methane_mat, glm::radians(60.0f), glm::vec3{0.0f, 1.0f, 0.0f});
-    auto methane = create_methane(glm::vec3{-10.0f, 0.0f, 0.0f}, 2.0f, methane_mat);
+    auto methane = create_methane(glm::vec3{-10.0f, 0.0f, 0.0f}, 2.0f);
     scene->add_drawable(methane);
 
     // Construct benzen
@@ -150,6 +147,18 @@ void App::main_loop() {
             second_counter = current_time;
             axolote::debug("FPS: %.1lf", 1.0 / dt);
         }
+
+        methane->set_rotation(glm::rotate(
+            glm::mat4{1.0f},
+            (float)current_time,
+            glm::vec3{1.0f, 0.7f, -0.3f}
+        ));
+
+        benzene->set_rotation(glm::rotate(
+            glm::mat4{1.0f},
+            (float)current_time * 3.0f,
+            glm::vec3{0.2f, 1.7f, -0.3f}
+        ));
 
         poll_events();
         process_input(dt);
