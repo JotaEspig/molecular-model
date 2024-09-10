@@ -63,10 +63,12 @@ Molecule::get_shaders() const {
     for (auto &atom : atoms) {
         auto aux = atom->get_shaders();
         shaders.insert(shaders.end(), aux.begin(), aux.end());
+        break;
     }
     for (auto &bond : bonds) {
         auto aux = bond->get_shaders();
         shaders.insert(shaders.end(), aux.begin(), aux.end());
+        break;
     }
     return shaders;
 }
