@@ -18,15 +18,24 @@ const float M_PIf = 3.14159265358979323846f;
 #endif
 
 void App::process_input(double dt) {
-    (void)dt;
     if (get_key_state(Key::ESCAPE) == KeyState::PRESSED)
         set_should_close(true);
 
+    const float zoom_speed = 2.0f;
+    const float move_speed = 0.5f;
     auto speed = current_scene()->camera.speed;
     if (get_key_state(Key::W) == KeyState::PRESSED)
-        radius = std::max(radius - (double)speed * dt, 0.1);
+        radius -= speed * zoom_speed * dt;
     if (get_key_state(Key::S) == KeyState::PRESSED)
-        radius += speed * dt;
+        radius += speed * zoom_speed * dt;
+    if (get_key_state(Key::A) == KeyState::PRESSED)
+        lon += speed * move_speed * dt;
+    if (get_key_state(Key::D) == KeyState::PRESSED)
+        lon -= speed * move_speed * dt;
+    if (get_key_state(Key::SPACE) == KeyState::PRESSED)
+        lat += speed * move_speed * dt;
+    if (get_key_state(Key::LEFT_SHIFT) == KeyState::PRESSED)
+        lat -= speed * move_speed * dt;
 
     if (get_mouse_key_state(MouseKey::RIGHT) == MouseKeyState::PRESSED) {
         set_cursor_mode(CursorMode::DISABLED);
@@ -42,19 +51,22 @@ void App::process_input(double dt) {
         get_cursor_position(&mouse_x, &mouse_y);
         lon += (mouse_x - half_center_x) * dt;
         lat += (mouse_y - half_center_y) * dt;
-#ifdef _WIN32
-        lat = clamp(lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
-#else
-        lat = glm::clamp(
-            (float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f
-        );
-#endif
         set_cursor_position(half_center_x, half_center_y);
     }
     if (get_mouse_key_state(MouseKey::RIGHT) == MouseKeyState::RELEASED) {
         set_cursor_mode(CursorMode::NORMAL);
         current_scene()->camera.first_click = true;
     }
+
+#ifdef _WIN32
+    lat = clamp(lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
+#else
+    lat = glm::clamp(
+        (float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f
+    );
+#endif
+
+    radius = std::max(radius, 0.1f);
 
     float x = std::cos(lat) * std::cos(lon);
     float y = std::sin(lat);
