@@ -32,7 +32,7 @@ public:
     /// @return added bond
     std::shared_ptr<Bond> add_bond(
         const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b,
-        Bond::Type type
+        Bond::Type type = Bond::Type::SINGULAR
     );
 
     void bind_shader(std::shared_ptr<axolote::gl::Shader> shader) override;
@@ -42,3 +42,13 @@ public:
     void draw() override;
     void draw(const glm::mat4 &mat) override;
 };
+
+/// @brief creates a methane molecule
+/// @param pos center position
+/// @param distance distance between hydrogens and carbon (bond length)
+/// @param rotation hydrogens rotation around carbon
+/// @return methane molecule
+std::shared_ptr<Molecule> create_methane(
+    const glm::vec3 &pos, float distance,
+    const glm::mat3 &rotation = glm::mat3{1.0f}
+);

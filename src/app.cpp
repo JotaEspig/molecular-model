@@ -94,6 +94,13 @@ void App::main_loop() {
     scene->set_grid(grid);
     set_scene(scene);
 
+    // Construct methane
+    glm::mat4 methane_mat{1.0f};
+    methane_mat = glm::rotate(methane_mat, glm::radians(45.0f), glm::vec3{1.0f, 0.0f, 0.0f});
+    methane_mat = glm::rotate(methane_mat, glm::radians(60.0f), glm::vec3{0.0f, 1.0f, 0.0f});
+    auto methane = create_methane(glm::vec3{-10.0f, 0.0f, 0.0f}, 2.0f, methane_mat);
+    scene->add_drawable(methane);
+
     // Construct benzen
     const float r = 4.0f;
     const float angle_step = M_PIf / 3.0f;

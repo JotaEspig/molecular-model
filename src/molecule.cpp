@@ -5,6 +5,20 @@
 
 #include "molecule.hpp"
 
+// Positions for the 4 points of a tetrahederon
+// https://en.wikipedia.org/wiki/Tetrahedron
+const float root2 = glm::sqrt(2.0f);
+const float root8 = glm::sqrt(8.0f);
+const float inv_root3 = 1.0f / glm::sqrt(3.0f);
+const float third = 1.0f / 3.0f;
+
+const glm::vec3 methane_positions[4] = {
+    {root8 * third, -third, 0.0f},
+    {-root2 * third, -third, root2 * inv_root3},
+    {-root2 * third, -third, -root2 * inv_root3},
+    {0.0f, 1.0f, 0.0f}
+};
+
 Molecule::Molecule() {
 }
 
@@ -80,4 +94,25 @@ void Molecule::draw() {
 void Molecule::draw(const glm::mat4 &mat) {
     (void)mat;
     draw();
+}
+
+std::shared_ptr<Molecule> create_methane(
+    const glm::vec3 &pos, float distance,
+    const glm::mat3 &rotation
+) {
+    // Model matrix based on parameters
+    glm::mat3 model{1.0f};
+    model *= rotation;
+    model *= (glm::mat3)glm::scale(glm::mat4{1.0f}, glm::vec3{distance});
+
+    // Create hydrogen atoms
+    auto methane = std::make_shared<Molecule>();
+    auto carbon = methane->add_carbon(pos);
+    for (int i = 0; i < 4; ++i) {
+        auto atom_pos = pos + model * methane_positions[i];
+        auto hydrogen = methane->add_hydrogen(atom_pos);
+        methane->add_bond(carbon, hydrogen);
+    }
+
+    return methane;
 }
