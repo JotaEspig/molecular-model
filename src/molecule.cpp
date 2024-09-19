@@ -76,7 +76,7 @@ std::shared_ptr<Atom> Molecule::add_hydrogen(const glm::vec3 &pos) {
     // Set initial global model matrix
     mat = glm::translate(mat, center);
     hydrogen->set_matrix(mat);
-    
+
     set_rotation(_rotation);
     return hydrogen;
 }

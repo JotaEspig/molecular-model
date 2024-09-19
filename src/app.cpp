@@ -85,7 +85,7 @@ void App::process_input(double dt) {
         glm::vec3 ray = current_scene()->camera.get_ray(
             (float)mouse_x, (float)mouse_y, (float)width(), (float)height()
         );
-    
+
         std::vector<std::shared_ptr<Atom>> intersected_atoms;
         for (auto &atom : atoms) {
             if (atom->intersect(current_scene()->camera.pos, ray)) {
@@ -104,7 +104,7 @@ void App::process_input(double dt) {
                 currently_highlighted->highlighted = false;
             }
             currently_highlighted = intersected_atoms[0];
-            currently_highlighted->highlighted = !currently_highlighted->highlighted; 
+            currently_highlighted->highlighted = !currently_highlighted->highlighted;
         }
 
         mouse_pressed = true;
