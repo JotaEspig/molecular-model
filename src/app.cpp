@@ -1,4 +1,8 @@
+#include <iostream>
+#include <algorithm>
+
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "axolote/scene.hpp"
 #define DEBUG
@@ -74,6 +78,44 @@ void App::process_input(double dt) {
     auto pos = glm::vec3{x, y, z} * radius;
     current_scene()->camera.pos = pos;
     current_scene()->camera.orientation = glm::normalize(-pos);
+
+    if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::PRESSED && mouse_pressed == false) {
+        double mouse_x, mouse_y;
+        get_cursor_position(&mouse_x, &mouse_y);
+        glm::vec3 ray = current_scene()->camera.get_ray(
+            (float)mouse_x, (float)mouse_y, (float)width(), (float)height()
+        );
+    
+        std::vector<std::shared_ptr<Atom>> intersected_atoms;
+        for (auto &atom : atoms) {
+            if (atom->intersect(current_scene()->camera.pos, ray)) {
+                intersected_atoms.push_back(atom);
+            }
+        }
+        std::sort(intersected_atoms.begin(), intersected_atoms.end(), [this](auto &a, auto &b) {
+            glm::vec3 pos_a = a->get_matrix()[3];
+            glm::vec3 pos_b = b->get_matrix()[3];
+            return glm::distance(pos_a, current_scene()->camera.pos) <
+                   glm::distance(pos_b, current_scene()->camera.pos);
+        });
+
+        if (intersected_atoms.size() > 0) {
+            if (currently_highlighted && currently_highlighted != intersected_atoms[0]) {
+                currently_highlighted->highlighted = false;
+            }
+            currently_highlighted = intersected_atoms[0];
+            currently_highlighted->highlighted = !currently_highlighted->highlighted; 
+        }
+
+        mouse_pressed = true;
+    }
+    else if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::RELEASED && mouse_pressed == true) {
+        mouse_pressed = false;
+    }
+}
+
+void App::add_atom(std::shared_ptr<Atom> atom) {
+    atoms.push_back(atom);
 }
 
 void App::main_loop() {
@@ -84,6 +126,11 @@ void App::main_loop() {
     auto grid_shader = axolote::gl::Shader::create(
         get_path("resources/shaders/grid_base_vertex_shader.glsl"),
         get_path("resources/shaders/grid_base_fragment_shader.glsl")
+    );
+
+    auto object3d_shader = axolote::gl::Shader::create(
+        get_path("resources/shaders/object3d_base_vertex_shader.glsl"),
+        get_path("resources/shaders/object3d_base_fragment_shader.glsl")
     );
 
     auto scene = std::make_shared<axolote::Scene>();
@@ -108,6 +155,9 @@ void App::main_loop() {
 
     // Construct methane
     auto methane = create_methane(glm::vec3{-10.0f, 0.0f, 0.0f}, 2.0f);
+    for (auto [atom, _] : methane->atoms) {
+        add_atom(atom);
+    }
     scene->add_drawable(methane);
 
     // Construct benzen
@@ -123,6 +173,8 @@ void App::main_loop() {
         float y = std::sin(angle_step * (float)i) * r;
         carbons[i] = benzene->add_carbon(glm::vec3{x, 0.0f, y});
         hydrogens[i] = benzene->add_hydrogen(glm::vec3{x, 0.0f, y} * 1.5f);
+        add_atom(carbons[i]);
+        add_atom(hydrogens[i]);
     }
 
     // Create bonds
@@ -148,17 +200,17 @@ void App::main_loop() {
             axolote::debug("FPS: %.1lf", 1.0 / dt);
         }
 
-        methane->set_rotation(glm::rotate(
-            glm::mat4{1.0f},
-            (float)current_time,
-            glm::vec3{1.0f, 0.7f, -0.3f}
-        ));
+        // methane->set_rotation(glm::rotate(
+        //     glm::mat4{1.0f},
+        //     (float)current_time,
+        //     glm::vec3{1.0f, 0.7f, -0.3f}
+        // ));
 
-        benzene->set_rotation(glm::rotate(
-            glm::mat4{1.0f},
-            (float)current_time * 3.0f,
-            glm::vec3{0.2f, 1.7f, -0.3f}
-        ));
+        // benzene->set_rotation(glm::rotate(
+        //     glm::mat4{1.0f},
+        //     (float)current_time * 3.0f,
+        //     glm::vec3{0.2f, 1.7f, -0.3f}
+        // ));
 
         poll_events();
         process_input(dt);

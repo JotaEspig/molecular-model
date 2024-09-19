@@ -53,6 +53,9 @@ public:
     void update(double dt) override;
     void draw() override;
     void draw(const glm::mat4 &mat) override;
+
+private:
+    glm::mat4 _rotation = glm::mat4{1.0f};
 };
 
 /// @brief creates a methane molecule

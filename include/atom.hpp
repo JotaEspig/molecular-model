@@ -13,7 +13,9 @@
  **/
 class Atom : public axolote::Object3D {
 public:
+    float radius = 1.0f;
     glm::vec4 color{1.0f};
+    bool highlighted = false;
 
     /**
      * @brief Constructor
@@ -22,8 +24,9 @@ public:
     /**
      * @brief Constructor
      **/
-    Atom(glm::vec4 color, float scale = 1.0f);
+    Atom(glm::vec4 color);
 
+    bool intersect(const glm::vec3 &ray_origin, const glm::vec3 &ray_direction);
     void draw() override;
     void draw(const glm::mat4 &mat) override;
 

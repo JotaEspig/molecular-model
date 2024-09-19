@@ -42,33 +42,42 @@ Molecule::Molecule() : Molecule{glm::vec3{0.0f}} {}
 Molecule::Molecule(const glm::vec3 &center) : center{center} {}
 
 std::shared_ptr<Atom> Molecule::add_carbon(const glm::vec3 &pos) {
+    const float carbon_radius = 1.0f;
     auto carbon = std::make_shared<Atom>(glm::vec4{0.3f, 0.3f, 0.3f, 1.0f});
+    carbon->radius = carbon_radius;
     carbon->is_affected_by_lights = true;
 
     // Save relative model matrix
     glm::mat4 mat{1.0f};
     mat = glm::translate(mat, pos);
+    mat = glm::scale(mat, glm::vec3{carbon_radius});
     atoms.push_back(std::make_pair(carbon, mat));
 
     // Set initial global model matrix
     mat = glm::translate(mat, center);
     carbon->set_matrix(mat);
+
+    set_rotation(_rotation);
     return carbon;
 }
 
 std::shared_ptr<Atom> Molecule::add_hydrogen(const glm::vec3 &pos) {
+    const float hydrogen_radius = 0.5f;
     auto hydrogen = std::make_shared<Atom>(glm::vec4{0.4f, 0.8f, 1.0f, 1.0f});
+    hydrogen->radius = hydrogen_radius;
     hydrogen->is_affected_by_lights = true;
 
     // Save relative model matrix
     glm::mat4 mat{1.0f};
     mat = glm::translate(mat, pos);
-    mat = glm::scale(mat, glm::vec3{0.5f});
+    mat = glm::scale(mat, glm::vec3{hydrogen_radius});
     atoms.push_back(std::make_pair(hydrogen, mat));
 
     // Set initial global model matrix
     mat = glm::translate(mat, center);
     hydrogen->set_matrix(mat);
+    
+    set_rotation(_rotation);
     return hydrogen;
 }
 
@@ -84,6 +93,8 @@ std::shared_ptr<Bond> Molecule::add_bond(
 }
 
 void Molecule::set_rotation(const glm::mat4 &rotation) {
+    _rotation = rotation;
+
     for (auto &[atom, model_mat] : atoms) {
         glm::vec3 pos;
         glm::mat4 rot;
@@ -96,9 +107,6 @@ void Molecule::set_rotation(const glm::mat4 &rotation) {
         new_mat = glm::translate(new_mat, pos);
         new_mat *= rot;
         new_mat = glm::scale(new_mat, scale);
-
-        // glm::mat4 new_mat = rotation;
-        // new_mat *= model_mat;
 
         atom->set_matrix(new_mat);
     }
