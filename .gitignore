@@ -2,6 +2,7 @@ build/
 .vscode/
 axolote-engine/
 external/
+.cache/
 
 *.so
 *.so.*

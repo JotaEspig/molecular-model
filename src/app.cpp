@@ -1,7 +1,7 @@
-#include <iostream>
 #include <algorithm>
 
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "axolote/scene.hpp"
@@ -65,9 +65,7 @@ void App::process_input(double dt) {
 #ifdef _WIN32
     lat = clamp(lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
 #else
-    lat = glm::clamp(
-        (float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f
-    );
+    lat = glm::clamp((float)lat, -M_PIf * 0.5f + 0.01f, M_PIf * 0.5f - 0.01f);
 #endif
 
     radius = std::max(radius, 0.1f);
@@ -79,7 +77,8 @@ void App::process_input(double dt) {
     current_scene()->camera.pos = pos;
     current_scene()->camera.orientation = glm::normalize(-pos);
 
-    if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::PRESSED && mouse_pressed == false) {
+    if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::PRESSED
+        && mouse_pressed == false) {
         double mouse_x, mouse_y;
         get_cursor_position(&mouse_x, &mouse_y);
         glm::vec3 ray = current_scene()->camera.get_ray(
@@ -92,24 +91,30 @@ void App::process_input(double dt) {
                 intersected_atoms.push_back(atom);
             }
         }
-        std::sort(intersected_atoms.begin(), intersected_atoms.end(), [this](auto &a, auto &b) {
-            glm::vec3 pos_a = a->get_matrix()[3];
-            glm::vec3 pos_b = b->get_matrix()[3];
-            return glm::distance(pos_a, current_scene()->camera.pos) <
-                   glm::distance(pos_b, current_scene()->camera.pos);
-        });
+        std::sort(
+            intersected_atoms.begin(), intersected_atoms.end(),
+            [this](auto &a, auto &b) {
+                glm::vec3 pos_a = a->get_matrix()[3];
+                glm::vec3 pos_b = b->get_matrix()[3];
+                return glm::distance(pos_a, current_scene()->camera.pos)
+                       < glm::distance(pos_b, current_scene()->camera.pos);
+            }
+        );
 
         if (intersected_atoms.size() > 0) {
-            if (currently_highlighted && currently_highlighted != intersected_atoms[0]) {
+            if (currently_highlighted
+                && currently_highlighted != intersected_atoms[0]) {
                 currently_highlighted->highlighted = false;
             }
             currently_highlighted = intersected_atoms[0];
-            currently_highlighted->highlighted = !currently_highlighted->highlighted;
+            currently_highlighted->highlighted
+                = !currently_highlighted->highlighted;
         }
 
         mouse_pressed = true;
     }
-    else if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::RELEASED && mouse_pressed == true) {
+    else if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::RELEASED
+             && mouse_pressed == true) {
         mouse_pressed = false;
     }
 }
