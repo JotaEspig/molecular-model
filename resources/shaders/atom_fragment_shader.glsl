@@ -210,6 +210,7 @@ void main() {
     }
 
     if (atom_highlight) {
+        float minimum_g = 0.05f;
         float intensity = 0.8f;
         axolote_DirectionalLight light;
         light.color = vec3(0.0f, 1.0f, 0.0f);
@@ -221,7 +222,7 @@ void main() {
         float diffuse = max(dot(normal, light_direction), 0.0f);
         vec3 diffuse_light_color = light.color.rgb * (diffuse + axolote_ambient_light_intensity);
 
-        float g = max(0.0f, intensity - diffuse_light_color.g);
+        float g = max(minimum_g, intensity - diffuse_light_color.g);
         FragColor.g += g;
         FragColor.rb -= vec2(g, g);
     }
