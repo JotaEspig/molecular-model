@@ -42,12 +42,43 @@ std::shared_ptr<Atom> Molecule::add_hydrogen() {
 
     auto ob_hydrogen = openbabel_obj.NewAtom();
     ob_hydrogen->SetAtomicNum(1);
+    openbabel_obj.SetHydrogensAdded(true);
 
     return hydrogen;
 }
 
+std::vector<std::shared_ptr<Atom>> Molecule::add_hydrogens() {
+    std::vector<std::shared_ptr<Atom>> hydrogens;
+    if (openbabel_obj.AddHydrogens()) {
+        std::cout << "Added hydrogens to the molecule" << std::endl;
+        openbabel_obj.PerceiveBondOrders();
+        OpenBabel::OBAtomIterator atom_it;
+        for (auto atom = openbabel_obj.BeginAtom(atom_it); atom != nullptr;
+             atom = openbabel_obj.NextAtom(atom_it)) {
+            std::cout << "Atom index: " << atom->GetIdx()
+                      << ", Atomic number: " << atom->GetAtomicNum()
+                      << std::endl;
+        }
+        // std::size_t num_atoms = openbabel_obj.NumAtoms();
+        // for (std::size_t i = 0; i < num_atoms; ++i) {
+        //     auto ob_atom = openbabel_obj.GetAtom(i + 1);
+        //     if (ob_atom->GetAtomicNum() == 1) {
+        //         std::cout << "Found hydrogen at index " << i << std::endl;
+        //         auto hydrogen
+        //             = std::make_shared<Atom>(glm::vec4{0.4f,
+        //             0.8f, 1.0f, 1.0f});
+        //         hydrogen->radius = 0.5f;
+        //         hydrogen->is_affected_by_lights = true;
+        //         atoms.push_back(hydrogen);
+        //         hydrogens.push_back(hydrogen);
+        //     }
+        // }
+    }
+    return hydrogens;
+}
+
 std::shared_ptr<Bond> Molecule::add_bond(
-    const std::size_t a_idx, const std::size_t b_idx, Bond::Type type
+    const std::size_t a_idx, const std::size_t b_idx, const Bond::Type type
 ) {
     auto a = atoms[a_idx];
     auto b = atoms[b_idx];
@@ -56,7 +87,16 @@ std::shared_ptr<Bond> Molecule::add_bond(
     bond->is_affected_by_lights = true;
     bonds.push_back(bond);
 
-    openbabel_obj.AddBond(a_idx + 1, b_idx + 1, static_cast<int>(type));
+    // Show the 2 atoms that will be affected
+    auto ob_a = openbabel_obj.GetAtom(a_idx + 1);
+    auto ob_b = openbabel_obj.GetAtom(b_idx + 1);
+    std::cout << "Adding bond between (" << ob_a->GetAtomicNum()
+              << " id: " << ob_a->GetIndex() << ") and ("
+              << ob_b->GetAtomicNum() << " id: " << ob_b->GetIndex() << ")\n";
+
+    if (!openbabel_obj.AddBond(a_idx + 1, b_idx + 1, static_cast<int>(type))) {
+        std::cerr << "Error: Could not add bond!" << std::endl;
+    }
 
     return bond;
 }
@@ -73,7 +113,11 @@ void Molecule::calculate_positions() {
         return;
     }
     forcefield->ConjugateGradients(1000, 1.0e-6);
-    forcefield->GetCoordinates(openbabel_obj);
+    if (!forcefield->GetCoordinates(openbabel_obj)) {
+        std::cerr << "Error: Could not get coordinates!" << std::endl;
+        return;
+    }
+
     std::size_t num_atoms = openbabel_obj.NumAtoms();
     for (std::size_t i = 0; i < num_atoms; ++i) {
         auto atom = openbabel_obj.GetAtom(i + 1);
@@ -89,7 +133,7 @@ void Molecule::calculate_positions() {
         position += center;
         mat = glm::translate(mat, position);
         mat = glm::scale(
-            mat, glm::vec3{atom->GetAtomicNum() == 1 ? 0.5f : 1.0f}
+            mat, glm::vec3{atom->GetAtomicNum() == 1 ? 0.6f : 1.0f}
         );
         atoms[i]->set_matrix(mat);
     }

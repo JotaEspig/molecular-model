@@ -26,13 +26,16 @@ public:
 
     Molecule(const glm::vec3 &center);
 
-    /// @brief Adds a carbon to the scene at provided position
+    /// @brief Adds a carbon to the scene
     /// @return added carbon
     std::shared_ptr<Atom> add_carbon();
 
-    /// @brief Add a hydrogen to the scene at provided position
+    /// @brief Add a hydrogen to the scene
     /// @return added hydrogen
     std::shared_ptr<Atom> add_hydrogen();
+    /// @brief Add left hydrogens to the scene at provided position
+    /// @return added hydrogens
+    std::vector<std::shared_ptr<Atom>> add_hydrogens();
 
     /// @brief Adds a bond to the scene between the two provided atoms
     /// @param a_idx first atom index
@@ -41,7 +44,7 @@ public:
     /// @return added bond
     std::shared_ptr<Bond> add_bond(
         const std::size_t a_idx, const std::size_t b_idx,
-        Bond::Type type = Bond::Type::SINGULAR
+        const Bond::Type type = Bond::Type::SINGULAR
     );
 
     /// @brief Calculate atoms positions, should be called after adding all

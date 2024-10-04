@@ -3,6 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <openbabel/bond.h>
+#include <openbabel/mol.h>
+#include <openbabel/obconversion.h>
 
 #include "axolote/scene.hpp"
 #define DEBUG
@@ -158,27 +161,34 @@ void App::main_loop() {
     scene->set_grid(grid);
     set_scene(scene);
 
-    // Construct benzen
-    const float r = 4.0f;
-    const float angle_step = M_PIf / 3.0f;
+    auto mol = std::make_shared<Molecule>();
+    add_atom(mol->add_carbon());
+    add_atom(mol->add_carbon());
+    mol->add_bond(0, 1, Bond::Type::SINGULAR);
+    add_atom(mol->add_hydrogen());
+    mol->add_bond(1, 2, Bond::Type::SINGULAR);
+    add_atom(mol->add_hydrogen());
+    mol->add_bond(0, 3, Bond::Type::SINGULAR);
 
-    auto ethane = std::make_shared<Molecule>();
-    add_atom(ethane->add_carbon());
-    add_atom(ethane->add_carbon());
-    for (int i = 0; i < 6; ++i)
-        add_atom(ethane->add_hydrogen());
+    mol->add_hydrogens();
+    mol->calculate_positions();
 
-    ethane->add_bond(0, 1, Bond::Type::SINGULAR);
-    ethane->add_bond(0, 2, Bond::Type::SINGULAR);
-    ethane->add_bond(0, 3, Bond::Type::SINGULAR);
-    ethane->add_bond(0, 4, Bond::Type::SINGULAR);
-    ethane->add_bond(1, 5, Bond::Type::SINGULAR);
-    ethane->add_bond(1, 6, Bond::Type::SINGULAR);
-    ethane->add_bond(1, 7, Bond::Type::SINGULAR);
+    OpenBabel::OBConversion conv;
+    conv.SetOutFormat("xyz"); // XYZ format
 
-    // ethane->openbabel_obj.AddHydrogens();
-    ethane->calculate_positions();
-    scene->add_drawable(ethane);
+    std::string xyzOutput = conv.WriteString(&mol->openbabel_obj, false);
+
+    std::cout << "XYZ representation of the molecule:\n"
+              << xyzOutput << std::endl;
+
+    // Iterate through bonds and print them
+    OpenBabel::OBBondIterator bond_it;
+    for (auto bond = mol->openbabel_obj.BeginBond(bond_it); bond != nullptr;
+         bond = mol->openbabel_obj.NextBond(bond_it)) {
+        std::cout << "Bond between atoms " << bond->GetBeginAtomIdx() << " and "
+                  << bond->GetEndAtomIdx() << std::endl;
+    }
+    scene->add_drawable(mol);
 
     // auto benzene = std::make_shared<Molecule>();
     // for (int i = 0; i < 6; ++i) {
