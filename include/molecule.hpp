@@ -4,18 +4,21 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include <openbabel/forcefield.h>
+#include <openbabel/mol.h>
+#include <openbabel/obconversion.h>
+#include <openbabel/obmolecformat.h>
 
 #include "atom.hpp"
 #include "bond.hpp"
 
 class Molecule : public axolote::Drawable {
 public:
+    OpenBabel::OBMol openbabel_obj;
     /// @brief List of pairs [atom, model_mat]
-    std::vector<std::pair<std::shared_ptr<Atom>, glm::mat4>> atoms;
-
+    std::vector<std::shared_ptr<Atom>> atoms;
     /// @brief List of bonds
     std::vector<std::shared_ptr<Bond>> bonds;
-
     /// @brief Molecule's center position
     glm::vec3 center;
 
@@ -24,28 +27,26 @@ public:
     Molecule(const glm::vec3 &center);
 
     /// @brief Adds a carbon to the scene at provided position
-    /// @param pos position relative to center
     /// @return added carbon
-    std::shared_ptr<Atom> add_carbon(const glm::vec3 &pos = glm::vec3{0.0f});
+    std::shared_ptr<Atom> add_carbon();
 
     /// @brief Add a hydrogen to the scene at provided position
-    /// @param pos position relative to center
     /// @return added hydrogen
-    std::shared_ptr<Atom> add_hydrogen(const glm::vec3 &pos = glm::vec3{0.0f});
+    std::shared_ptr<Atom> add_hydrogen();
 
     /// @brief Adds a bond to the scene between the two provided atoms
-    /// @param a first atom
-    /// @param b second atom
+    /// @param a_idx first atom index
+    /// @param b_idx second atom index
     /// @param type bond type
     /// @return added bond
     std::shared_ptr<Bond> add_bond(
-        const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b,
+        const std::size_t a_idx, const std::size_t b_idx,
         Bond::Type type = Bond::Type::SINGULAR
     );
 
-    /// @brief Sets molecule rotation, applies to all its atoms
-    /// @param rotation rotation matrix
-    void set_rotation(const glm::mat4 &rotation);
+    /// @brief Calculate atoms positions, should be called after adding all
+    /// atoms
+    void calculate_positions();
 
     void bind_shader(std::shared_ptr<axolote::gl::Shader> shader) override;
     std::vector<std::shared_ptr<axolote::gl::Shader>>
@@ -57,9 +58,3 @@ public:
 private:
     glm::mat4 _rotation = glm::mat4{1.0f};
 };
-
-/// @brief creates a methane molecule
-/// @param pos center position
-/// @param distance distance between hydrogens and carbon (bond length)
-/// @return methane molecule
-std::shared_ptr<Molecule> create_methane(const glm::vec3 &pos, float distance);

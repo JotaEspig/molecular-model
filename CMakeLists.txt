@@ -31,6 +31,8 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
 find_package(Doxygen OPTIONAL_COMPONENTS dot)
+find_package(OpenBabel3 REQUIRED)
+find_package(antlr4-runtime REQUIRED)
 
 set(ASSIMP_LIB assimp)
 set(ASSIMP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/external/include_assimp)
@@ -82,6 +84,15 @@ set(
     ${SOURCE_DIR}/main.cpp
     ${SOURCE_DIR}/molecule.cpp
     ${SOURCE_DIR}/utils.cpp
+
+    #${SOURCE_DIR}/parser/lib.cpp
+    #${SOURCE_DIR}/parser/molecule.cpp
+    #${SOURCE_DIR}/parser/mylistener.cpp
+    #${SOURCE_DIR}/parser/MolBaseListener.cpp
+    #${SOURCE_DIR}/parser/MolListener.cpp
+    #${SOURCE_DIR}/parser/MolParser.cpp
+
+
 )
 
 # Adding executables
@@ -99,7 +110,7 @@ target_link_libraries(
     molecular-model
     PUBLIC
     axolote
-    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB}
+    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB} ${OpenBabel3_LIBRARIES}
 )
 if (UNIX)
     target_link_libraries(molecular-model PUBLIC stdc++)
@@ -110,9 +121,11 @@ target_include_directories(
     molecular-model
     PUBLIC
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/parser
     ${CMAKE_SOURCE_DIR}/external/include
     ${CMAKE_SOURCE_DIR}/external/imgui/include
     ${ASSIMP_INCLUDE_DIRS}
+    ${OpenBabel3_INCLUDE_DIRS}
 )
 
 

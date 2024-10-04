@@ -13,16 +13,16 @@ public:
     /// @brief Bond type
     enum class Type {
         /// @brief singular bond
-        SINGULAR,
+        SINGULAR = 1,
 
         /// @brief double bond
-        DOUBLE,
+        DOUBLE = 2,
 
         /// @brief triple bond
-        TRIPLE,
+        TRIPLE = 3,
 
         /// @brief quadruple bond
-        QUADRUPLE,
+        QUADRUPLE = 4,
     };
 
     /// @brief Default constructor

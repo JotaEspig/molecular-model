@@ -5,114 +5,95 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <openbabel/forcefield.h>
+#include <openbabel/mol.h>
+#include <openbabel/obconversion.h>
+#include <openbabel/obmolecformat.h>
 
 #include "molecule.hpp"
 
-// Positions for the 4 points of a tetrahederon
-// https://en.wikipedia.org/wiki/Tetrahedron
-const float root2 = glm::sqrt(2.0f);
-const float root8 = glm::sqrt(8.0f);
-const float inv_root3 = 1.0f / glm::sqrt(3.0f);
-const float third = 1.0f / 3.0f;
-
-const glm::vec3 methane_positions[4] = {
-    {root8 * third, -third, 0.0f},
-    {-root2 * third, -third, root2 * inv_root3},
-    {-root2 * third, -third, -root2 * inv_root3},
-    {0.0f, 1.0f, 0.0f}
-};
-
-void decompose_matrix(const glm::mat4 &m, glm::vec3 &pos, glm::mat4 &rot, glm::vec3 &scale) {
-    pos = m[3];
-
-    for(int i = 0; i < 3; i++) {
-        scale[i] = glm::length(glm::vec3{m[i]});
-    }
-
-    const glm::mat3 rot_matrix(
-        glm::vec3{m[0]} / scale[0],
-        glm::vec3{m[1]} / scale[1],
-        glm::vec3{m[2]} / scale[2]
-    );
-
-    rot = glm::toMat4(glm::quat_cast(rot_matrix));
+Molecule::Molecule() :
+  Molecule{glm::vec3{0.0f}} {
 }
 
-Molecule::Molecule() : Molecule{glm::vec3{0.0f}} {}
+Molecule::Molecule(const glm::vec3 &center) :
+  center{center} {
+}
 
-Molecule::Molecule(const glm::vec3 &center) : center{center} {}
-
-std::shared_ptr<Atom> Molecule::add_carbon(const glm::vec3 &pos) {
+std::shared_ptr<Atom> Molecule::add_carbon() {
     const float carbon_radius = 1.0f;
     auto carbon = std::make_shared<Atom>(glm::vec4{0.3f, 0.3f, 0.3f, 1.0f});
     carbon->radius = carbon_radius;
     carbon->is_affected_by_lights = true;
+    atoms.push_back(carbon);
 
-    // Save relative model matrix
-    glm::mat4 mat{1.0f};
-    mat = glm::translate(mat, pos);
-    mat = glm::scale(mat, glm::vec3{carbon_radius});
-    atoms.push_back(std::make_pair(carbon, mat));
+    auto ob_carbon = openbabel_obj.NewAtom();
+    ob_carbon->SetAtomicNum(6);
 
-    // Set initial global model matrix
-    mat = glm::translate(mat, center);
-    carbon->set_matrix(mat);
-
-    set_rotation(_rotation);
     return carbon;
 }
 
-std::shared_ptr<Atom> Molecule::add_hydrogen(const glm::vec3 &pos) {
+std::shared_ptr<Atom> Molecule::add_hydrogen() {
     const float hydrogen_radius = 0.5f;
     auto hydrogen = std::make_shared<Atom>(glm::vec4{0.4f, 0.8f, 1.0f, 1.0f});
     hydrogen->radius = hydrogen_radius;
     hydrogen->is_affected_by_lights = true;
+    atoms.push_back(hydrogen);
 
-    // Save relative model matrix
-    glm::mat4 mat{1.0f};
-    mat = glm::translate(mat, pos);
-    mat = glm::scale(mat, glm::vec3{hydrogen_radius});
-    atoms.push_back(std::make_pair(hydrogen, mat));
+    auto ob_hydrogen = openbabel_obj.NewAtom();
+    ob_hydrogen->SetAtomicNum(1);
 
-    // Set initial global model matrix
-    mat = glm::translate(mat, center);
-    hydrogen->set_matrix(mat);
-
-    set_rotation(_rotation);
     return hydrogen;
 }
 
 std::shared_ptr<Bond> Molecule::add_bond(
-    const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b,
-    Bond::Type type
+    const std::size_t a_idx, const std::size_t b_idx, Bond::Type type
 ) {
+    auto a = atoms[a_idx];
+    auto b = atoms[b_idx];
     auto bond = std::make_shared<Bond>(a, b);
     bond->set_type(type);
     bond->is_affected_by_lights = true;
     bonds.push_back(bond);
+
+    openbabel_obj.AddBond(a_idx + 1, b_idx + 1, static_cast<int>(type));
+
     return bond;
 }
 
-void Molecule::set_rotation(const glm::mat4 &rotation) {
-    _rotation = rotation;
-
-    for (auto &[atom, model_mat] : atoms) {
-        glm::vec3 pos;
-        glm::mat4 rot;
-        glm::vec3 scale;
-        decompose_matrix(model_mat, pos, rot, scale);
-
-        glm::mat4 new_mat{1.0f};
-        new_mat = glm::translate(new_mat, center);
-        new_mat *= rotation;
-        new_mat = glm::translate(new_mat, pos);
-        new_mat *= rot;
-        new_mat = glm::scale(new_mat, scale);
-
-        atom->set_matrix(new_mat);
+void Molecule::calculate_positions() {
+    auto forcefield = OpenBabel::OBForceField::FindForceField("GAFF");
+    if (!forcefield) {
+        std::cerr << "Error: force field not found!" << std::endl;
+        return;
+    }
+    forcefield->SetLogLevel(OBFF_LOGLVL_HIGH);
+    if (!forcefield->Setup(openbabel_obj)) {
+        std::cerr << "Error: Could not set up force field!" << std::endl;
+        return;
+    }
+    forcefield->ConjugateGradients(1000, 1.0e-6);
+    forcefield->GetCoordinates(openbabel_obj);
+    std::size_t num_atoms = openbabel_obj.NumAtoms();
+    for (std::size_t i = 0; i < num_atoms; ++i) {
+        auto atom = openbabel_obj.GetAtom(i + 1);
+        auto pos = atom->GetVector();
+        double x = pos.GetX();
+        double y = pos.GetY();
+        double z = pos.GetZ();
+        std::cout << "Atom " << i << " index " << atom->GetIndex() << " at ("
+                  << x << ", " << y << ", " << z << ")" << std::endl;
+        glm::mat4 mat{1.0f};
+        glm::vec3 position{x, y, z};
+        position *= 2;
+        position += center;
+        mat = glm::translate(mat, position);
+        mat = glm::scale(
+            mat, glm::vec3{atom->GetAtomicNum() == 1 ? 0.5f : 1.0f}
+        );
+        atoms[i]->set_matrix(mat);
     }
 }
-
 
 void Molecule::bind_shader(std::shared_ptr<axolote::gl::Shader> shader) {
     (void)shader;
@@ -121,7 +102,7 @@ void Molecule::bind_shader(std::shared_ptr<axolote::gl::Shader> shader) {
 std::vector<std::shared_ptr<axolote::gl::Shader>>
 Molecule::get_shaders() const {
     std::vector<std::shared_ptr<axolote::gl::Shader>> shaders;
-    for (auto &[atom, _] : atoms) {
+    for (auto &atom : atoms) {
         auto aux = atom->get_shaders();
         shaders.insert(shaders.end(), aux.begin(), aux.end());
         break;
@@ -135,7 +116,7 @@ Molecule::get_shaders() const {
 }
 
 void Molecule::update(double dt) {
-    for (auto &[atom, _] : atoms) {
+    for (auto &atom : atoms) {
         atom->update(dt);
     }
 
@@ -145,7 +126,7 @@ void Molecule::update(double dt) {
 }
 
 void Molecule::draw() {
-    for (auto &[atom, _] : atoms) {
+    for (auto &atom : atoms) {
         atom->draw();
     }
 
@@ -157,17 +138,4 @@ void Molecule::draw() {
 void Molecule::draw(const glm::mat4 &mat) {
     (void)mat;
     draw();
-}
-
-std::shared_ptr<Molecule> create_methane(const glm::vec3 &pos, float distance) {
-    // Create hydrogen atoms
-    auto methane = std::make_shared<Molecule>(pos);
-    auto carbon = methane->add_carbon();
-    for (int i = 0; i < 4; ++i) {
-        auto atom_pos = methane_positions[i] * distance;
-        auto hydrogen = methane->add_hydrogen(atom_pos);
-        methane->add_bond(carbon, hydrogen);
-    }
-
-    return methane;
 }

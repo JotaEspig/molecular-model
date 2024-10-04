@@ -158,38 +158,53 @@ void App::main_loop() {
     scene->set_grid(grid);
     set_scene(scene);
 
-    // Construct methane
-    auto methane = create_methane(glm::vec3{-10.0f, 0.0f, 0.0f}, 2.0f);
-    for (auto [atom, _] : methane->atoms) {
-        add_atom(atom);
-    }
-    scene->add_drawable(methane);
-
     // Construct benzen
     const float r = 4.0f;
     const float angle_step = M_PIf / 3.0f;
 
-    auto benzene = std::make_shared<Molecule>();
-    // Create carbons and hydrogens
-    std::shared_ptr<Atom> carbons[6];
-    std::shared_ptr<Atom> hydrogens[6];
-    for (int i = 0; i < 6; ++i) {
-        float x = std::cos(angle_step * (float)i) * r;
-        float y = std::sin(angle_step * (float)i) * r;
-        carbons[i] = benzene->add_carbon(glm::vec3{x, 0.0f, y});
-        hydrogens[i] = benzene->add_hydrogen(glm::vec3{x, 0.0f, y} * 1.5f);
-        add_atom(carbons[i]);
-        add_atom(hydrogens[i]);
-    }
+    auto ethane = std::make_shared<Molecule>();
+    add_atom(ethane->add_carbon());
+    add_atom(ethane->add_carbon());
+    for (int i = 0; i < 6; ++i)
+        add_atom(ethane->add_hydrogen());
 
-    // Create bonds
-    for (int i = 0; i < 6; ++i) {
-        Bond::Type type = (i % 2) ? Bond::Type::DOUBLE : Bond::Type::SINGULAR;
-        benzene->add_bond(carbons[i], carbons[(i + 1) % 6], type);
-        benzene->add_bond(carbons[i], hydrogens[i], Bond::Type::SINGULAR);
-    }
+    ethane->add_bond(0, 1, Bond::Type::SINGULAR);
+    ethane->add_bond(0, 2, Bond::Type::SINGULAR);
+    ethane->add_bond(0, 3, Bond::Type::SINGULAR);
+    ethane->add_bond(0, 4, Bond::Type::SINGULAR);
+    ethane->add_bond(1, 5, Bond::Type::SINGULAR);
+    ethane->add_bond(1, 6, Bond::Type::SINGULAR);
+    ethane->add_bond(1, 7, Bond::Type::SINGULAR);
 
-    scene->add_drawable(benzene);
+    // ethane->openbabel_obj.AddHydrogens();
+    ethane->calculate_positions();
+    scene->add_drawable(ethane);
+
+    // auto benzene = std::make_shared<Molecule>();
+    // for (int i = 0; i < 6; ++i) {
+    //     auto carbon = benzene->add_carbon();
+    //     add_atom(carbon);
+    // }
+    // for (int i = 0; i < 6; ++i) {
+    //     auto hydrogen = benzene->add_hydrogen();
+    //     add_atom(hydrogen);
+    // }
+
+    //// Create bonds
+    // for (int i = 0; i < 6; ++i) {
+    //     Bond::Type type = (i % 2) ? Bond::Type::DOUBLE :
+    //     Bond::Type::SINGULAR;
+
+    //    // carbon-carbon bond
+    //    benzene->add_bond(i, (i + 1) % 6, type);
+
+    //    // carbon-hydrogen bond
+    //    benzene->add_bond(i, i + 6, Bond::Type::SINGULAR);
+    //}
+
+    // benzene->calculate_positions();
+    //
+    // scene->add_drawable(benzene);
 
     double last_time = get_time();
     int second_counter = 0;
