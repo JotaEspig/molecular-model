@@ -162,29 +162,49 @@ void App::main_loop() {
     set_scene(scene);
 
     auto mol = std::make_shared<Molecule>();
-    add_atom(mol->add_carbon());
-    for (int i = 0; i < 3; ++i)
-        add_atom(mol->add_hydrogen());
-    mol->add_bond(0, 1, Bond::Type::SINGULAR);
-    mol->add_bond(0, 2, Bond::Type::SINGULAR);
-    mol->add_bond(0, 3, Bond::Type::SINGULAR);
+    // add_atom(mol->add_carbon());
+    // for (int i = 0; i < 3; ++i)
+    //     add_atom(mol->add_hydrogen());
+    // mol->add_bond(0, 1, Bond::Type::SINGULAR);
+    // mol->add_bond(0, 2, Bond::Type::SINGULAR);
+    // mol->add_bond(0, 3, Bond::Type::SINGULAR);
 
-    add_atom(mol->add_carbon());
-    mol->add_bond(0, 4, Bond::Type::SINGULAR);
-    for (int i = 0; i < 2; ++i)
-        add_atom(mol->add_hydrogen());
-    mol->add_bond(4, 5, Bond::Type::SINGULAR);
-    mol->add_bond(4, 6, Bond::Type::SINGULAR);
+    // add_atom(mol->add_carbon());
+    // mol->add_bond(0, 4, Bond::Type::SINGULAR);
+    // for (int i = 0; i < 2; ++i)
+    //     add_atom(mol->add_hydrogen());
+    // mol->add_bond(4, 5, Bond::Type::SINGULAR);
+    // mol->add_bond(4, 6, Bond::Type::SINGULAR);
 
-    add_atom(mol->add_carbon());
-    mol->add_bond(4, 7, Bond::Type::SINGULAR);
-    for (int i = 0; i < 3; ++i)
-        add_atom(mol->add_hydrogen());
-    mol->add_bond(7, 8, Bond::Type::SINGULAR);
-    mol->add_bond(7, 9, Bond::Type::SINGULAR);
-    mol->add_bond(7, 10, Bond::Type::SINGULAR);
+    // add_atom(mol->add_carbon());
+    // mol->add_bond(4, 7, Bond::Type::SINGULAR);
+    // for (int i = 0; i < 3; ++i)
+    //     add_atom(mol->add_hydrogen());
+    // mol->add_bond(7, 8, Bond::Type::SINGULAR);
+    // mol->add_bond(7, 9, Bond::Type::SINGULAR);
+    // mol->add_bond(7, 10, Bond::Type::SINGULAR);
 
-    mol->add_hydrogens();
+    // Build a benzene molecule
+    for (int i = 0; i < 6; ++i) {
+        auto carbon = mol->add_carbon();
+        add_atom(carbon);
+    }
+    // Carbon bonds
+    for (int i = 0; i < 6; ++i) {
+        mol->add_bond(
+            i, (i + 1) % 6,
+            i % 2 == 0 ? Bond::Type::SINGULAR : Bond::Type::DOUBLE
+        );
+    }
+    for (int i = 0; i < 6; ++i) {
+        auto hydrogen = mol->add_hydrogen();
+        add_atom(hydrogen);
+    }
+    // Hydrogen bonds
+    for (int i = 0; i < 6; ++i) {
+        mol->add_bond(i, i + 6, Bond::Type::SINGULAR);
+    }
+
     mol->calculate_positions();
 
     OpenBabel::OBConversion conv;

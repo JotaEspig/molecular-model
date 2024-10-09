@@ -33,9 +33,6 @@ public:
     /// @brief Add a hydrogen to the scene
     /// @return added hydrogen
     std::shared_ptr<Atom> add_hydrogen();
-    /// @brief Add left hydrogens to the scene at provided position
-    /// @return added hydrogens
-    std::vector<std::shared_ptr<Atom>> add_hydrogens();
 
     /// @brief Adds a bond to the scene between the two provided atoms
     /// @param a_idx first atom index

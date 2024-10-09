@@ -48,36 +48,6 @@ std::shared_ptr<Atom> Molecule::add_hydrogen() {
     return hydrogen;
 }
 
-std::vector<std::shared_ptr<Atom>> Molecule::add_hydrogens() {
-    std::vector<std::shared_ptr<Atom>> hydrogens;
-    if (openbabel_obj.AddHydrogens()) {
-        std::cout << "Added hydrogens to the molecule" << std::endl;
-        openbabel_obj.PerceiveBondOrders();
-        OpenBabel::OBAtomIterator atom_it;
-        for (auto atom = openbabel_obj.BeginAtom(atom_it); atom != nullptr;
-             atom = openbabel_obj.NextAtom(atom_it)) {
-            std::cout << "Atom index: " << atom->GetIdx()
-                      << ", Atomic number: " << atom->GetAtomicNum()
-                      << std::endl;
-        }
-        // std::size_t num_atoms = openbabel_obj.NumAtoms();
-        // for (std::size_t i = 0; i < num_atoms; ++i) {
-        //     auto ob_atom = openbabel_obj.GetAtom(i + 1);
-        //     if (ob_atom->GetAtomicNum() == 1) {
-        //         std::cout << "Found hydrogen at index " << i << std::endl;
-        //         auto hydrogen
-        //             = std::make_shared<Atom>(glm::vec4{0.4f,
-        //             0.8f, 1.0f, 1.0f});
-        //         hydrogen->radius = 0.5f;
-        //         hydrogen->is_affected_by_lights = true;
-        //         atoms.push_back(hydrogen);
-        //         hydrogens.push_back(hydrogen);
-        //     }
-        // }
-    }
-    return hydrogens;
-}
-
 std::shared_ptr<Bond> Molecule::add_bond(
     const std::size_t a_idx, const std::size_t b_idx, const Bond::Type type
 ) {
