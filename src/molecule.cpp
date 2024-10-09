@@ -5,6 +5,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <openbabel/builder.h>
 #include <openbabel/forcefield.h>
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
@@ -87,13 +88,6 @@ std::shared_ptr<Bond> Molecule::add_bond(
     bond->is_affected_by_lights = true;
     bonds.push_back(bond);
 
-    // Show the 2 atoms that will be affected
-    auto ob_a = openbabel_obj.GetAtom(a_idx + 1);
-    auto ob_b = openbabel_obj.GetAtom(b_idx + 1);
-    std::cout << "Adding bond between (" << ob_a->GetAtomicNum()
-              << " id: " << ob_a->GetIndex() << ") and ("
-              << ob_b->GetAtomicNum() << " id: " << ob_b->GetIndex() << ")\n";
-
     if (!openbabel_obj.AddBond(a_idx + 1, b_idx + 1, static_cast<int>(type))) {
         std::cerr << "Error: Could not add bond!" << std::endl;
     }
@@ -102,12 +96,22 @@ std::shared_ptr<Bond> Molecule::add_bond(
 }
 
 void Molecule::calculate_positions() {
+    // Pre builds the molecule
+    // NECESSARY to calculate positions
+    // Otherwise, the force field won't work, because if you don't build the
+    // molecule the atoms will be at the same position (0, 0, 0)
+    OpenBabel::OBBuilder builder;
+    builder.Build(openbabel_obj);
+
     auto forcefield = OpenBabel::OBForceField::FindForceField("GAFF");
     if (!forcefield) {
         std::cerr << "Error: force field not found!" << std::endl;
         return;
     }
-    forcefield->SetLogLevel(OBFF_LOGLVL_HIGH);
+
+    forcefield->SetLogLevel(OBFF_LOGLVL_NONE);
+    forcefield->SetLogFile(&std::cout);
+
     if (!forcefield->Setup(openbabel_obj)) {
         std::cerr << "Error: Could not set up force field!" << std::endl;
         return;
@@ -119,23 +123,30 @@ void Molecule::calculate_positions() {
     }
 
     std::size_t num_atoms = openbabel_obj.NumAtoms();
+    glm::vec3 mean_center{0.0f};
     for (std::size_t i = 0; i < num_atoms; ++i) {
         auto atom = openbabel_obj.GetAtom(i + 1);
         auto pos = atom->GetVector();
-        double x = pos.GetX();
-        double y = pos.GetY();
-        double z = pos.GetZ();
-        std::cout << "Atom " << i << " index " << atom->GetIndex() << " at ("
-                  << x << ", " << y << ", " << z << ")" << std::endl;
-        glm::mat4 mat{1.0f};
-        glm::vec3 position{x, y, z};
+        glm::vec3 position{pos.GetX(), pos.GetY(), pos.GetZ()};
         position *= 2;
         position += center;
-        mat = glm::translate(mat, position);
-        mat = glm::scale(
-            mat, glm::vec3{atom->GetAtomicNum() == 1 ? 0.6f : 1.0f}
-        );
+
+        glm::mat4 mat = glm::translate(glm::mat4{1.0f}, position);
+        mean_center += glm::vec3{position};
         atoms[i]->set_matrix(mat);
+    }
+    mean_center /= atoms.size();
+
+    // Center the molecule at the 0, 0, 0
+    for (std::size_t i = 0; i < num_atoms; ++i) {
+        auto &atom = atoms[i];
+        auto ob_atom = openbabel_obj.GetAtom(i + 1);
+        glm::mat4 mat = atom->get_matrix();
+        mat = glm::translate(mat, -mean_center);
+        mat = glm::scale(
+            mat, glm::vec3{ob_atom->GetAtomicNum() == 1 ? 0.6f : 1.0f}
+        );
+        atom->set_matrix(mat);
     }
 }
 
