@@ -44,7 +44,7 @@ uniform bool axolote_is_affected_by_lights_set;
 
 // Scene info
 uniform vec3 axolote_camera_pos;
-uniform float axolote_ambient_light;
+uniform vec3 axolote_ambient_light;
 uniform float axolote_ambient_light_intensity;
 
 // Scene lights
@@ -77,7 +77,7 @@ vec3 axolote_calculate_point_light(axolote_PointLight light) {
     vec3 light_direction = normalize(light.pos - axolote_current_pos);
     float diffuse = max(dot(normal, light_direction), 0.0f);
 
-    float specular_light = 0.25f;
+    float specular_light = 0.0f;
     vec3 view_direction = normalize(axolote_camera_pos - axolote_current_pos);
     vec3 reflection_direction = reflect(-light_direction, normal);
     float spec_amount
@@ -105,7 +105,7 @@ vec3 axolote_calculate_directional_light(axolote_DirectionalLight light) {
     vec3 light_direction = normalize(-light.dir);
     float diffuse = max(dot(normal, light_direction), 0.0f);
 
-    float specular_light = 0.25f;
+    float specular_light = 0.0f;
     vec3 view_direction = normalize(axolote_camera_pos - axolote_current_pos);
     vec3 reflection_direction = reflect(-light_direction, normal);
     float spec_amount
@@ -126,7 +126,7 @@ vec3 axolote_calculate_spot_light(axolote_SpotLight light) {
 
     float diffuse = max(dot(normal, light_direction), 0.0f);
 
-    float specular_light = 0.25f;
+    float specular_light = 0.0f;
     vec3 view_direction = normalize(axolote_camera_pos - axolote_current_pos);
     vec3 reflection_direction = reflect(-light_direction, normal);
     float spec_amount
@@ -178,10 +178,10 @@ vec3 axolote_calculate_light() {
         color += axolote_calculate_spot_light(axolote_spot_lights[i]);
     }
 
-    if (color == vec3(0.0f)) {
-        color = vec3(1.0f) * axolote_ambient_light_intensity;
-    }
-    return color + (axolote_ambient_light * axolote_ambient_light_intensity);
+    color.r = clamp(max(color.r, axolote_ambient_light.r * axolote_ambient_light_intensity), 0.0f, 1.0f);
+    color.g = clamp(max(color.g, axolote_ambient_light.g * axolote_ambient_light_intensity), 0.0f, 1.0f);
+    color.b = clamp(max(color.b, axolote_ambient_light.b * axolote_ambient_light_intensity), 0.0f, 1.0f);
+    return color;
 }
 
 void main() {

@@ -145,7 +145,7 @@ void App::main_loop() {
     scene->camera.pos = {0.0f, 0.0f, 12.35f};
     scene->camera.speed = 3.0f;
     scene->camera.sensitivity = 10000.0f;
-    scene->ambient_light_intensity = 0.2f;
+    scene->ambient_light_intensity = 0.3f;
 
     auto grid = std::make_shared<axolote::utils::Grid>(
         70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
