@@ -146,6 +146,7 @@ void App::process_input(double dt) {
             if (can_delete) {
                 current_molecule->delete_atom_at(idx);
                 current_molecule->calculate_positions();
+                currently_highlighted = nullptr;
             }
             else {
                 has_failed_to_delete = true;
