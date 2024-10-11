@@ -1,3 +1,7 @@
+#include "parser/MolLexer.h"
+#include "parser/MolListener.h"
+#include "parser/MolParser.h"
+
 #include "parser/lib.hpp"
 
 using namespace std;
@@ -33,7 +37,6 @@ public:
 
         for (auto pos_token : ctx->pos()->INT()) {
             int pos = stoi(pos_token->getText());
-            std::cout << pos << "\n";
             m.add_substituente(pos, prefix);
         }
     }

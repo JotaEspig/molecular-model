@@ -1,10 +1,13 @@
+#include <algorithm>
 #include <memory>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <openbabel/bond.h>
 #include <openbabel/builder.h>
 #include <openbabel/forcefield.h>
 #include <openbabel/mol.h>
@@ -19,6 +22,27 @@ Molecule::Molecule() :
 
 Molecule::Molecule(const glm::vec3 &center) :
   center{center} {
+}
+
+void Molecule::setup(parser::Molecule1 &parsed_mol_processed) {
+    for (auto atomic_num : parsed_mol_processed.atoms) {
+        add_atom(atomic_num);
+    }
+    for (auto bond : parsed_mol_processed.bonds) {
+        add_bond(bond.i, bond.j, static_cast<Bond::Type>(bond.k));
+    }
+
+    calculate_positions();
+}
+
+std::shared_ptr<Atom> Molecule::add_atom(int atomic_num) {
+    if (atomic_num == 6) {
+        return add_carbon();
+    }
+    else if (atomic_num == 1) {
+        return add_hydrogen();
+    }
+    return nullptr;
 }
 
 std::shared_ptr<Atom> Molecule::add_carbon() {
@@ -118,6 +142,76 @@ void Molecule::calculate_positions() {
         );
         atom->set_matrix(mat);
     }
+}
+
+bool Molecule::can_delete_atom_at(const size_t idx) const {
+    auto atom = openbabel_obj.GetAtom(idx + 1);
+    if (atom->GetAtomicNum() == 1) {
+        return true;
+    }
+    // Verifies if the atoms has 2 or more bonds to others non-hydrogen atoms
+    size_t counter = 0;
+    OpenBabel::OBBondIterator bond_it;
+    for (auto bond = atom->BeginBond(bond_it); bond;
+         bond = atom->NextBond(bond_it)) {
+        if (counter >= 2) {
+            break;
+        }
+        auto other_atom = bond->GetNbrAtom(atom);
+        if (other_atom->GetAtomicNum() != 1) {
+            ++counter;
+        }
+    }
+    return counter < 2;
+}
+
+bool Molecule::delete_atom_at(const size_t idx) {
+    if (!can_delete_atom_at(idx)) {
+        return false;
+    }
+
+    auto ob_atom = openbabel_obj.GetAtom(idx + 1);
+    if (ob_atom->GetAtomicNum() == 1) {
+        for (size_t i = 0; i < bonds.size(); ++i) {
+            auto atom = atoms[idx];
+            auto bond = bonds[i];
+            if (bond->a() == atom || bond->b() == atom) {
+                auto ob_bond = openbabel_obj.GetBond(i);
+                openbabel_obj.DeleteBond(ob_bond);
+                bonds.erase(bonds.begin() + i);
+                break;
+            }
+        }
+        openbabel_obj.DeleteAtom(ob_atom);
+        atoms.erase(atoms.begin() + idx);
+        return true;
+    }
+
+    // Delete all bonds and hydrogen atoms attached to the atom
+    std::vector<OpenBabel::OBAtom *> to_delete_atoms;
+    std::vector<OpenBabel::OBBond *> to_delete_bonds;
+    OpenBabel::OBBondIterator bond_it;
+    for (auto bond = ob_atom->BeginBond(bond_it); bond;
+         bond = ob_atom->NextBond(bond_it)) {
+
+        auto other_ob_atom = bond->GetNbrAtom(ob_atom);
+        to_delete_bonds.push_back(bond);
+        if (other_ob_atom->GetAtomicNum() == 1) {
+            to_delete_atoms.push_back(other_ob_atom);
+        }
+    }
+    to_delete_atoms.push_back(ob_atom);
+
+    for (auto ob_bond : to_delete_bonds) {
+        bonds.erase(bonds.begin() + ob_bond->GetIdx());
+        openbabel_obj.DeleteBond(ob_bond);
+    }
+    for (auto ob_atom : to_delete_atoms) {
+        atoms.erase(atoms.begin() + ob_atom->GetIdx() - 1);
+        openbabel_obj.DeleteAtom(ob_atom);
+    }
+
+    return true;
 }
 
 void Molecule::bind_shader(std::shared_ptr<axolote::gl::Shader> shader) {

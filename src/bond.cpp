@@ -21,8 +21,8 @@ Bond::Bond() :
 
 Bond::Bond(const std::shared_ptr<Atom> &a, const std::shared_ptr<Atom> &b) :
   Bond{} {
-    Bond::a = a;
-    Bond::b = b;
+    Bond::_a = a;
+    Bond::_b = b;
 }
 
 void Bond::set_type(Type type) {
@@ -33,14 +33,22 @@ Bond::Type Bond::get_type() {
     return type;
 }
 
+std::shared_ptr<Atom> Bond::a() {
+    return _a;
+}
+
+std::shared_ptr<Atom> Bond::b() {
+    return _b;
+}
+
 void Bond::update(double dt) {
     // Set start to atom A's position
-    auto mat_a = a->get_matrix();
+    auto mat_a = _a->get_matrix();
     glm::vec3 pos = mat_a[3];
     start = pos;
 
     // Set end to atom B's position
-    auto mat_b = b->get_matrix();
+    auto mat_b = _b->get_matrix();
     glm::vec3 end = mat_b[3];
     set_end(end);
 

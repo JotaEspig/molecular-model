@@ -1,10 +1,5 @@
 #pragma once
 
-#include <iostream>
-
-#include "parser/MolLexer.h"
-#include "parser/MolListener.h"
-#include "parser/MolParser.h"
 #include "parser/a_molecule.hpp"
 #include "parser/utils2.hpp"
 #include <antlr4-runtime.h>

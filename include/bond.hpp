@@ -41,6 +41,13 @@ public:
     /// @return current bond type
     Type get_type();
 
+    /// @brief getter for first atom
+    /// @return first atom
+    std::shared_ptr<Atom> a();
+    /// @brief getter for second atom
+    /// @return second atom
+    std::shared_ptr<Atom> b();
+
     void update(double dt) override;
     void draw() override;
 
@@ -51,10 +58,10 @@ private:
     void _drawQuadrupleBond();
 
     /// @brief pointer to first atom
-    std::shared_ptr<Atom> a;
+    std::shared_ptr<Atom> _a;
 
     /// @brief pointer to seond atom
-    std::shared_ptr<Atom> b;
+    std::shared_ptr<Atom> _b;
 
     /// @brief Bond type
     Type type = Type::SINGULAR;

@@ -17,7 +17,6 @@
 
 #include "app.hpp"
 #include "atom.hpp"
-#include "bond.hpp"
 #include "molecule.hpp"
 #include "parser/lib.hpp"
 
@@ -29,9 +28,6 @@ const float M_PIf = 3.14159265358979323846f;
 #endif
 
 void App::process_input(double dt) {
-    if (get_key_state(Key::ESCAPE) == KeyState::PRESSED)
-        set_should_close(true);
-
     const float zoom_speed = 2.0f;
     const float move_speed = 0.5f;
     auto speed = current_scene()->camera.speed;
@@ -84,6 +80,10 @@ void App::process_input(double dt) {
     current_scene()->camera.pos = pos;
     current_scene()->camera.orientation = glm::normalize(-pos);
 
+    // Stops if there is no molecule to interact with
+    if (current_molecule == nullptr)
+        return;
+
     if (get_mouse_key_state(MouseKey::LEFT) == MouseKeyState::PRESSED
         && mouse_pressed == false) {
         double mouse_x, mouse_y;
@@ -93,7 +93,7 @@ void App::process_input(double dt) {
         );
 
         std::vector<std::shared_ptr<Atom>> intersected_atoms;
-        for (auto &atom : atoms) {
+        for (auto &atom : current_molecule->atoms) {
             if (atom->intersect(current_scene()->camera.pos, ray)) {
                 intersected_atoms.push_back(atom);
             }
@@ -124,10 +124,39 @@ void App::process_input(double dt) {
              && mouse_pressed == true) {
         mouse_pressed = false;
     }
-}
 
-void App::add_atom(std::shared_ptr<Atom> atom) {
-    atoms.push_back(atom);
+    bool should_process_delete_press
+        = get_key_state(Key::DELETE) == KeyState::PRESSED
+          && !is_key_pressed(Key::DELETE);
+    bool should_process_delete_release
+        = get_key_state(Key::DELETE) == KeyState::RELEASED
+          && is_key_pressed(Key::DELETE);
+
+    if (should_process_delete_press) {
+        if (currently_highlighted) {
+            size_t idx = 0;
+            for (size_t i = 0; i < current_molecule->atoms.size(); ++i) {
+                if (current_molecule->atoms[i] == currently_highlighted) {
+                    idx = i;
+                    break;
+                }
+            }
+
+            bool can_delete = current_molecule->can_delete_atom_at(idx);
+            if (can_delete) {
+                current_molecule->delete_atom_at(idx);
+                current_molecule->calculate_positions();
+            }
+            else {
+                has_failed_to_delete = true;
+            }
+        }
+        set_key_pressed(Key::DELETE, true);
+    }
+    if (should_process_delete_release) {
+
+        set_key_pressed(Key::DELETE, false);
+    }
 }
 
 void App::main_loop() {
@@ -146,75 +175,26 @@ void App::main_loop() {
     scene->camera.sensitivity = 10000.0f;
     scene->ambient_light_intensity = 0.6f;
 
-    auto dir_light = std::make_shared<axolote::DirectionalLight>(
+    dir_light = std::make_shared<axolote::DirectionalLight>(
         glm::vec4{1.0f}, true, glm::vec3{-1.0f, -0.5f, -1.0f}
     );
 
     scene->add_light(dir_light);
 
-    char mol_name[100] = "2-etilpent-1-eno";
+    strncpy(mol_name, "metano", 100);
     auto parsed_mol = parser::parse(mol_name);
     auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
-    std::shared_ptr<Molecule> mol = std::make_shared<Molecule>();
 
-    for (auto a : parsed_mol_processed.atoms) {
-        std::shared_ptr<Atom> atom = nullptr;
-        if (a == 1)
-            atom = mol->add_hydrogen();
-        else if (a == 6)
-            atom = mol->add_carbon();
-    }
-    for (auto b : parsed_mol_processed.bonds) {
-        mol->add_bond(b.i, b.j, static_cast<Bond::Type>(b.k));
-    }
+    current_molecule = std::make_shared<Molecule>();
+    current_molecule->setup(parsed_mol_processed);
+    scene->add_drawable(current_molecule);
 
-    mol->calculate_positions();
-    scene->add_drawable(mol);
-
-    for (auto atom : mol->atoms) {
-        add_atom(atom);
-    }
-
-    auto grid = std::make_shared<axolote::utils::Grid>(
+    grid = std::make_shared<axolote::utils::Grid>(
         70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
     );
     grid->fading_factor = 70.0f;
     grid->bind_shader(grid_shader);
     scene->set_grid(grid);
-
-    auto recreate_molecule_by_name = [this, &mol, dir_light,
-                                      grid](const char *mol_name) {
-        auto new_scene = std::make_shared<axolote::Scene>();
-        new_scene->camera = current_scene()->camera;
-        new_scene->ambient_light_intensity
-            = current_scene()->ambient_light_intensity;
-
-        mol = std::make_shared<Molecule>();
-        auto parsed_mol = parser::parse(mol_name);
-        auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
-
-        for (auto a : parsed_mol_processed.atoms) {
-            std::shared_ptr<Atom> atom = nullptr;
-            if (a == 1)
-                atom = mol->add_hydrogen();
-            else if (a == 6)
-                atom = mol->add_carbon();
-        }
-        for (auto b : parsed_mol_processed.bonds) {
-            mol->add_bond(b.i, b.j, static_cast<Bond::Type>(b.k));
-        }
-
-        atoms.clear();
-        for (auto atom : mol->atoms) {
-            add_atom(atom);
-        }
-
-        mol->calculate_positions();
-        new_scene->add_drawable(mol);
-        new_scene->add_light(dir_light);
-        new_scene->set_grid(grid);
-        set_scene(new_scene);
-    };
 
     set_scene(scene);
     double last_time = get_time();
@@ -244,27 +224,65 @@ void App::main_loop() {
         update(dt);
         render();
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        im_gui_operations();
 
-        // Set Frame size for ImGui
-        ImGui::SetNextWindowSize(ImVec2(280, 90), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Nome da molécula");
-        ImGui::InputText("Nome", mol_name, 100);
-        if (ImGui::Button("Parse")) {
+        flush();
+    }
+}
+
+void App::recreate_molecule_by_name(const char *mol_name) {
+    auto new_scene = std::make_shared<axolote::Scene>();
+    new_scene->camera = current_scene()->camera;
+    new_scene->ambient_light_intensity
+        = current_scene()->ambient_light_intensity;
+
+    current_molecule = std::make_shared<Molecule>();
+    auto parsed_mol = parser::parse(mol_name);
+    auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
+
+    current_molecule->setup(parsed_mol_processed);
+
+    new_scene->add_drawable(current_molecule);
+    new_scene->add_light(dir_light);
+    new_scene->set_grid(grid);
+    set_scene(new_scene);
+}
+
+void App::im_gui_operations() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Set Frame size for ImGui
+    ImGui::SetNextWindowSize(ImVec2(280, 80), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Nome da molécula");
+    ImGui::InputText("Nome", mol_name, 100);
+    if (!ImGui::IsPopupOpen("Falha ao deletar")) {
+        if (ImGui::Button("Gerar")) {
             recreate_molecule_by_name(mol_name);
         }
         else if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::IsWindowFocused()
                  && !ImGui::IsAnyItemActive()) {
             recreate_molecule_by_name(mol_name);
         }
-
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        flush();
     }
+
+    if (has_failed_to_delete) {
+        ImGui::OpenPopup("Falha ao deletar");
+    }
+    if (ImGui::BeginPopupModal(
+            "Falha ao deletar", NULL, ImGuiWindowFlags_AlwaysAutoResize
+        )) {
+        ImGui::Text("Não é possível deletar este átomo.");
+        if (ImGui::Button("OK") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            has_failed_to_delete = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
