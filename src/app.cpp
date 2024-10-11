@@ -2,6 +2,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <glm/gtx/string_cast.hpp>
 #include <openbabel/bond.h>
 #include <openbabel/mol.h>
@@ -128,7 +131,6 @@ void App::add_atom(std::shared_ptr<Atom> atom) {
 }
 
 void App::main_loop() {
-
     _root_path = PROJECT_DIR;
     glfwSetWindowUserPointer(window(), this);
     set_color({0.1f, 0.1f, 0.1f, 0.5f});
@@ -138,114 +140,86 @@ void App::main_loop() {
         get_path("resources/shaders/grid_base_fragment_shader.glsl")
     );
 
-    auto object3d_shader = axolote::gl::Shader::create(
-        get_path("resources/shaders/object3d_base_vertex_shader.glsl"),
-        get_path("resources/shaders/object3d_base_fragment_shader.glsl")
-    );
-
     auto scene = std::make_shared<axolote::Scene>();
     scene->camera.pos = {0.0f, 0.0f, 12.35f};
     scene->camera.speed = 3.0f;
     scene->camera.sensitivity = 10000.0f;
-    scene->ambient_light_intensity = 0.3f;
-
-    auto grid = std::make_shared<axolote::utils::Grid>(
-        70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
-    );
-    grid->fading_factor = 70.0f;
-    grid->bind_shader(grid_shader);
+    scene->ambient_light_intensity = 0.6f;
 
     auto dir_light = std::make_shared<axolote::DirectionalLight>(
         glm::vec4{1.0f}, true, glm::vec3{-1.0f, -0.5f, -1.0f}
     );
 
     scene->add_light(dir_light);
-    scene->set_grid(grid);
-    set_scene(scene);
 
-    auto __mol = parser::parse("3-etilpent-1-ino");
-    auto __mol1 = parser::Molecule1_from_Molecule(__mol);
-    auto mol = std::make_shared<Molecule>();
+    char mol_name[100] = "2-etilpent-1-eno";
+    auto parsed_mol = parser::parse(mol_name);
+    auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
+    std::shared_ptr<Molecule> mol = std::make_shared<Molecule>();
 
-    for (auto a : __mol1.atoms) {
-        std::shared_ptr<Atom> atom;
+    for (auto a : parsed_mol_processed.atoms) {
+        std::shared_ptr<Atom> atom = nullptr;
         if (a == 1)
             atom = mol->add_hydrogen();
         else if (a == 6)
             atom = mol->add_carbon();
-        add_atom(atom);
     }
-    for (auto b : __mol1.bonds) {
+    for (auto b : parsed_mol_processed.bonds) {
         mol->add_bond(b.i, b.j, static_cast<Bond::Type>(b.k));
     }
+
     mol->calculate_positions();
-
-    // Build a benzene molecule
-    // for (int i = 0; i < 6; ++i) {
-    //    auto carbon = mol->add_carbon();
-    //    add_atom(carbon);
-    //}
-    //// Carbon bonds
-    // for (int i = 0; i < 6; ++i) {
-    //     mol->add_bond(
-    //         i, (i + 1) % 6,
-    //         i % 2 == 0 ? Bond::Type::SINGULAR : Bond::Type::DOUBLE
-    //     );
-    // }
-    // for (int i = 0; i < 6; ++i) {
-    //     auto hydrogen = mol->add_hydrogen();
-    //     add_atom(hydrogen);
-    // }
-    //// Hydrogen bonds
-    // for (int i = 0; i < 6; ++i) {
-    //     mol->add_bond(i, i + 6, Bond::Type::SINGULAR);
-    // }
-
-    // mol->calculate_positions();
-
-    OpenBabel::OBConversion conv;
-    conv.SetOutFormat("xyz"); // XYZ format
-
-    std::string xyzOutput = conv.WriteString(&mol->openbabel_obj, false);
-
-    std::cout << "XYZ representation of the molecule:\n"
-              << xyzOutput << std::endl;
-
-    OpenBabel::OBBondIterator bond_it;
-    for (auto bond = mol->openbabel_obj.BeginBond(bond_it); bond != nullptr;
-         bond = mol->openbabel_obj.NextBond(bond_it)) {
-        std::cout << "Bond between atoms " << bond->GetBeginAtomIdx() << " and "
-                  << bond->GetEndAtomIdx() << std::endl;
-    }
     scene->add_drawable(mol);
 
-    auto _mol = parser::parse("butano");
-    auto _mol1 = parser::Molecule1_from_Molecule(_mol);
-
-    int c_count = 0;
-    int h_count = 0;
-    for (auto a : _mol1.atoms) {
-        if (a == 1)
-            h_count++;
-        else if (a == 6)
-            c_count++;
+    for (auto atom : mol->atoms) {
+        add_atom(atom);
     }
 
-    std::cout << "num carbons: " << c_count << ", num hydrogens: " << h_count
-              << "\n";
+    auto grid = std::make_shared<axolote::utils::Grid>(
+        70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
+    );
+    grid->fading_factor = 70.0f;
+    grid->bind_shader(grid_shader);
+    scene->set_grid(grid);
 
-    std::cout << "total atoms: " << _mol1.atoms.size() << "\n";
-    for (auto m : _mol1.atoms) {
-        std::cout << m << " ";
-    }
-    std::cout << "\n";
-    for (auto m : _mol1.bonds) {
-        std::cout << m.i << " - " << m.j << " - " << m.k << ";";
-    }
-    std::cout << "\n";
+    auto recreate_molecule_by_name = [this, &mol, dir_light,
+                                      grid](const char *mol_name) {
+        auto new_scene = std::make_shared<axolote::Scene>();
+        new_scene->camera = current_scene()->camera;
+        new_scene->ambient_light_intensity
+            = current_scene()->ambient_light_intensity;
 
+        mol = std::make_shared<Molecule>();
+        auto parsed_mol = parser::parse(mol_name);
+        auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
+
+        for (auto a : parsed_mol_processed.atoms) {
+            std::shared_ptr<Atom> atom = nullptr;
+            if (a == 1)
+                atom = mol->add_hydrogen();
+            else if (a == 6)
+                atom = mol->add_carbon();
+        }
+        for (auto b : parsed_mol_processed.bonds) {
+            mol->add_bond(b.i, b.j, static_cast<Bond::Type>(b.k));
+        }
+
+        atoms.clear();
+        for (auto atom : mol->atoms) {
+            add_atom(atom);
+        }
+
+        mol->calculate_positions();
+        new_scene->add_drawable(mol);
+        new_scene->add_light(dir_light);
+        new_scene->set_grid(grid);
+        set_scene(new_scene);
+    };
+
+    set_scene(scene);
     double last_time = get_time();
     int second_counter = 0;
+    double accumulated_frames = 0;
     while (!should_close()) {
         clear();
 
@@ -255,15 +229,41 @@ void App::main_loop() {
 
         if (current_time - second_counter >= 5.0) {
             second_counter = current_time;
-            axolote::debug("FPS: %.1lf", 1.0 / dt);
+            axolote::debug("FPS: %.1lf", accumulated_frames / 5.0);
+            accumulated_frames = 0;
+        }
+        else {
+            ++accumulated_frames;
         }
 
         poll_events();
-        process_input(dt);
+        if (!ImGui::IsAnyItemActive())
+            process_input(dt);
 
         update_camera((float)width() / height());
         update(dt);
         render();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Set Frame size for ImGui
+        ImGui::SetNextWindowSize(ImVec2(280, 90), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Nome da molécula");
+        ImGui::InputText("Nome", mol_name, 100);
+        if (ImGui::Button("Parse")) {
+            recreate_molecule_by_name(mol_name);
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::IsWindowFocused()
+                 && !ImGui::IsAnyItemActive()) {
+            recreate_molecule_by_name(mol_name);
+        }
+
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         flush();
     }
