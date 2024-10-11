@@ -1,13 +1,17 @@
+#pragma once
 
 #include <iostream>
 
-#include "antlr4-runtime.h"
-#include "src/parser/MolLexer.h"
-#include "src/parser/MolParser.h"
-#include "src/parser/MolListener.h"
-#include "src/molecule.hpp"
+#include "parser/MolLexer.h"
+#include "parser/MolListener.h"
+#include "parser/MolParser.h"
+#include "parser/a_molecule.hpp"
+#include "parser/utils2.hpp"
+#include <antlr4-runtime.h>
 
-using namespace std;
-using namespace antlr4;
+namespace parser {
 
-Molecule parse(string iupac_molecule);
+Molecule parse(std::string iupac_molecule);
+Molecule1 Molecule1_from_Molecule(Molecule m);
+
+}

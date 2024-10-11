@@ -85,19 +85,19 @@ set(
     ${SOURCE_DIR}/molecule.cpp
     ${SOURCE_DIR}/utils.cpp
 
-    #${SOURCE_DIR}/parser/lib.cpp
-    #${SOURCE_DIR}/parser/molecule.cpp
-    #${SOURCE_DIR}/parser/mylistener.cpp
-    #${SOURCE_DIR}/parser/MolBaseListener.cpp
-    #${SOURCE_DIR}/parser/MolListener.cpp
-    #${SOURCE_DIR}/parser/MolParser.cpp
-
+    ${SOURCE_DIR}/parser/lib.cpp
+    ${SOURCE_DIR}/parser/a_molecule.cpp
+    ${SOURCE_DIR}/parser/MolBaseListener.cpp
+    ${SOURCE_DIR}/parser/MolListener.cpp
+    ${SOURCE_DIR}/parser/MolLexer.cpp
+    ${SOURCE_DIR}/parser/MolParser.cpp
 
 )
 
 # Adding executables
 add_executable(molecular-model ${SOURCE_FILES})
 add_dependencies(molecular-model axolote)
+add_dependencies(molecular-model antlr4_shared)
 target_compile_definitions(molecular-model PUBLIC GLAD_GLAPI_EXPORT)
 target_compile_definitions(molecular-model PUBLIC PROJECT_DIR="${CMAKE_SOURCE_DIR}")
 
@@ -110,7 +110,7 @@ target_link_libraries(
     molecular-model
     PUBLIC
     axolote
-    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB} ${OpenBabel3_LIBRARIES}
+    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB} ${OpenBabel3_LIBRARIES} antlr4_shared
 )
 if (UNIX)
     target_link_libraries(molecular-model PUBLIC stdc++)
@@ -126,6 +126,7 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/external/imgui/include
     ${ASSIMP_INCLUDE_DIRS}
     ${OpenBabel3_INCLUDE_DIRS}
+    ${ANTLR4_INCLUDE_DIR}
 )
 
 

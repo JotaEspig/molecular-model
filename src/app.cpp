@@ -16,6 +16,7 @@
 #include "atom.hpp"
 #include "bond.hpp"
 #include "molecule.hpp"
+#include "parser/lib.hpp"
 
 #ifdef _WIN32
 double clamp(double value, double min, double max) {
@@ -127,6 +128,7 @@ void App::add_atom(std::shared_ptr<Atom> atom) {
 }
 
 void App::main_loop() {
+
     _root_path = PROJECT_DIR;
     glfwSetWindowUserPointer(window(), this);
     set_color({0.1f, 0.1f, 0.1f, 0.5f});
@@ -161,51 +163,45 @@ void App::main_loop() {
     scene->set_grid(grid);
     set_scene(scene);
 
+    auto __mol = parser::parse("3-etilpent-1-ino");
+    auto __mol1 = parser::Molecule1_from_Molecule(__mol);
     auto mol = std::make_shared<Molecule>();
-    // add_atom(mol->add_carbon());
-    // for (int i = 0; i < 3; ++i)
-    //     add_atom(mol->add_hydrogen());
-    // mol->add_bond(0, 1, Bond::Type::SINGULAR);
-    // mol->add_bond(0, 2, Bond::Type::SINGULAR);
-    // mol->add_bond(0, 3, Bond::Type::SINGULAR);
 
-    // add_atom(mol->add_carbon());
-    // mol->add_bond(0, 4, Bond::Type::SINGULAR);
-    // for (int i = 0; i < 2; ++i)
-    //     add_atom(mol->add_hydrogen());
-    // mol->add_bond(4, 5, Bond::Type::SINGULAR);
-    // mol->add_bond(4, 6, Bond::Type::SINGULAR);
-
-    // add_atom(mol->add_carbon());
-    // mol->add_bond(4, 7, Bond::Type::SINGULAR);
-    // for (int i = 0; i < 3; ++i)
-    //     add_atom(mol->add_hydrogen());
-    // mol->add_bond(7, 8, Bond::Type::SINGULAR);
-    // mol->add_bond(7, 9, Bond::Type::SINGULAR);
-    // mol->add_bond(7, 10, Bond::Type::SINGULAR);
+    for (auto a : __mol1.atoms) {
+        std::shared_ptr<Atom> atom;
+        if (a == 1)
+            atom = mol->add_hydrogen();
+        else if (a == 6)
+            atom = mol->add_carbon();
+        add_atom(atom);
+    }
+    for (auto b : __mol1.bonds) {
+        mol->add_bond(b.i, b.j, static_cast<Bond::Type>(b.k));
+    }
+    mol->calculate_positions();
 
     // Build a benzene molecule
-    for (int i = 0; i < 6; ++i) {
-        auto carbon = mol->add_carbon();
-        add_atom(carbon);
-    }
-    // Carbon bonds
-    for (int i = 0; i < 6; ++i) {
-        mol->add_bond(
-            i, (i + 1) % 6,
-            i % 2 == 0 ? Bond::Type::SINGULAR : Bond::Type::DOUBLE
-        );
-    }
-    for (int i = 0; i < 6; ++i) {
-        auto hydrogen = mol->add_hydrogen();
-        add_atom(hydrogen);
-    }
-    // Hydrogen bonds
-    for (int i = 0; i < 6; ++i) {
-        mol->add_bond(i, i + 6, Bond::Type::SINGULAR);
-    }
+    // for (int i = 0; i < 6; ++i) {
+    //    auto carbon = mol->add_carbon();
+    //    add_atom(carbon);
+    //}
+    //// Carbon bonds
+    // for (int i = 0; i < 6; ++i) {
+    //     mol->add_bond(
+    //         i, (i + 1) % 6,
+    //         i % 2 == 0 ? Bond::Type::SINGULAR : Bond::Type::DOUBLE
+    //     );
+    // }
+    // for (int i = 0; i < 6; ++i) {
+    //     auto hydrogen = mol->add_hydrogen();
+    //     add_atom(hydrogen);
+    // }
+    //// Hydrogen bonds
+    // for (int i = 0; i < 6; ++i) {
+    //     mol->add_bond(i, i + 6, Bond::Type::SINGULAR);
+    // }
 
-    mol->calculate_positions();
+    // mol->calculate_positions();
 
     OpenBabel::OBConversion conv;
     conv.SetOutFormat("xyz"); // XYZ format
@@ -215,7 +211,6 @@ void App::main_loop() {
     std::cout << "XYZ representation of the molecule:\n"
               << xyzOutput << std::endl;
 
-    // Iterate through bonds and print them
     OpenBabel::OBBondIterator bond_it;
     for (auto bond = mol->openbabel_obj.BeginBond(bond_it); bond != nullptr;
          bond = mol->openbabel_obj.NextBond(bond_it)) {
@@ -224,31 +219,30 @@ void App::main_loop() {
     }
     scene->add_drawable(mol);
 
-    // auto benzene = std::make_shared<Molecule>();
-    // for (int i = 0; i < 6; ++i) {
-    //     auto carbon = benzene->add_carbon();
-    //     add_atom(carbon);
-    // }
-    // for (int i = 0; i < 6; ++i) {
-    //     auto hydrogen = benzene->add_hydrogen();
-    //     add_atom(hydrogen);
-    // }
+    auto _mol = parser::parse("butano");
+    auto _mol1 = parser::Molecule1_from_Molecule(_mol);
 
-    //// Create bonds
-    // for (int i = 0; i < 6; ++i) {
-    //     Bond::Type type = (i % 2) ? Bond::Type::DOUBLE :
-    //     Bond::Type::SINGULAR;
+    int c_count = 0;
+    int h_count = 0;
+    for (auto a : _mol1.atoms) {
+        if (a == 1)
+            h_count++;
+        else if (a == 6)
+            c_count++;
+    }
 
-    //    // carbon-carbon bond
-    //    benzene->add_bond(i, (i + 1) % 6, type);
+    std::cout << "num carbons: " << c_count << ", num hydrogens: " << h_count
+              << "\n";
 
-    //    // carbon-hydrogen bond
-    //    benzene->add_bond(i, i + 6, Bond::Type::SINGULAR);
-    //}
-
-    // benzene->calculate_positions();
-    //
-    // scene->add_drawable(benzene);
+    std::cout << "total atoms: " << _mol1.atoms.size() << "\n";
+    for (auto m : _mol1.atoms) {
+        std::cout << m << " ";
+    }
+    std::cout << "\n";
+    for (auto m : _mol1.bonds) {
+        std::cout << m.i << " - " << m.j << " - " << m.k << ";";
+    }
+    std::cout << "\n";
 
     double last_time = get_time();
     int second_counter = 0;
@@ -263,18 +257,6 @@ void App::main_loop() {
             second_counter = current_time;
             axolote::debug("FPS: %.1lf", 1.0 / dt);
         }
-
-        // methane->set_rotation(glm::rotate(
-        //     glm::mat4{1.0f},
-        //     (float)current_time,
-        //     glm::vec3{1.0f, 0.7f, -0.3f}
-        // ));
-
-        // benzene->set_rotation(glm::rotate(
-        //     glm::mat4{1.0f},
-        //     (float)current_time * 3.0f,
-        //     glm::vec3{0.2f, 1.7f, -0.3f}
-        // ));
 
         poll_events();
         process_input(dt);
