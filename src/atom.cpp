@@ -1,6 +1,6 @@
+#include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec3.hpp>
-#include <glm/geometric.hpp>
 
 #include "atom.hpp"
 #include "utils.hpp"
@@ -34,7 +34,9 @@ Atom::Atom(glm::vec4 color) :
     Atom::color = color;
 }
 
-bool Atom::intersect(const glm::vec3 &ray_origin, const glm::vec3 &ray_direction) {
+bool Atom::intersect(
+    const glm::vec3 &ray_origin, const glm::vec3 &ray_direction
+) {
     glm::vec3 position = get_matrix()[3];
     glm::vec3 oc = ray_origin - glm::vec3(position);
     float a = glm::dot(ray_direction, ray_direction);
