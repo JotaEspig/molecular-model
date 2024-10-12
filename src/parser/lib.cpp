@@ -138,7 +138,9 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         // add bonds to each new hydrogen
         for (int j = 0; j < temp_carbons[i]; ++j) {
             m2.atoms.push_back(1);
-            m2.bonds.push_back({i, m2.atoms.size() - 1, 1});
+            m2.bonds.push_back(
+                Bond1{i, static_cast<int>(m2.atoms.size() - 1), 1}
+            );
         }
     }
 
