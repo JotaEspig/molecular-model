@@ -58,6 +58,13 @@ public:
 
     virtual void enterGrupo_funcional(MolParser::Grupo_funcionalContext *ctx
     ) override {
+        string grupo_funcional = ctx->GRUPO_FUNCIONAL()->getText();
+        if (ctx->pos()) {
+            for (auto localizador : ctx->pos()->INT()) {
+                int pos = stoi(localizador->getText());
+                m.add_grupo_funcional(pos, grupo_funcional);
+            }
+        }
     }
     virtual void exitGrupo_funcional(MolParser::Grupo_funcionalContext *ctx
     ) override {
@@ -125,9 +132,51 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         m2.bonds[pos].k = type;
     }
 
+    vector<pair<string, int>> grupos = m.get_grupo_funcional();
+    for (auto grupo : grupos) {
+        string name = grupo.first;
+        int pos = grupo.second;
+
+        const int nitrogen = 7;
+        const int oxygen = 8;
+        int atomic_number;
+        if (name == "amina")
+            atomic_number = nitrogen;
+        else if (name == "ona")
+            atomic_number = oxygen;
+        else if (name == "o")
+            continue;
+
+        m2.atoms.push_back(atomic_number);
+        int bond_type = 1;
+        if (name == "ona")
+            bond_type = 2;
+        Bond1 bond = {pos - 1, m2.atoms.size() - 1, bond_type};
+        m2.bonds.push_back(bond);
+    }
+
     // add missing hydrogens to each carbon
     vector<int> temp_carbons(m2.atoms.size(), 4);
+    for (int i = 0; i < m2.atoms.size(); ++i) {
+        const int atomic_number = m2.atoms[i];
+        const int CARBON = 6;
+        const int NITROGEN = 7;
+        const int OXYGEN = 8;
+        switch (atomic_number) {
+        case CARBON:
+            temp_carbons[i] = 4;
+            break;
+        case NITROGEN:
+            temp_carbons[i] = 3;
+            break;
+        case OXYGEN:
+            temp_carbons[i] = 2;
+            break;
+        }
+    }
+
     for (int i = 0; i < m2.bonds.size(); i++) {
+
         auto bond = m2.bonds[i];
         temp_carbons[bond.i] -= bond.k;
         temp_carbons[bond.j] -= bond.k;

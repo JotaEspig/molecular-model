@@ -5,7 +5,7 @@ molecula    : ramificacao* cadeia insaturacao grupo_funcional EOF;
 cadeia: CICLO? PREFIXO;
 ramificacao           : ('-'? pos '-' numero?)? cadeia 'il' '-'?;
 insaturacao           : ('-' pos '-' numero?)? (LIGACAO);
-grupo_funcional       : GRUPO_FUNCIONAL;
+grupo_funcional       : ('-' pos '-' numero?)? GRUPO_FUNCIONAL;
 
 numero      : 'di' | 'tri' | 'tetra';
 pos         : (INT ',')* INT;
@@ -29,7 +29,7 @@ LIGACAO :
  | 'en'
  | 'in';
 
-GRUPO_FUNCIONAL : 'o';
+GRUPO_FUNCIONAL : 'o' | 'ona' | 'amina';
 
 INT        : [0-9]+ ;
 WHITESPACE : ' ' -> skip;

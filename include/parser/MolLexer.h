@@ -3,50 +3,48 @@
 
 #pragma once
 
-#include <antlr4-runtime.h>
 
-class MolLexer : public antlr4::Lexer {
+#include "antlr4-runtime.h"
+
+
+
+
+class  MolLexer : public antlr4::Lexer {
 public:
-    enum {
-        T__0 = 1,
-        T__1 = 2,
-        T__2 = 3,
-        T__3 = 4,
-        T__4 = 5,
-        T__5 = 6,
-        CICLO = 7,
-        PREFIXO = 8,
-        LIGACAO = 9,
-        GRUPO_FUNCIONAL = 10,
-        INT = 11,
-        WHITESPACE = 12
-    };
+  enum {
+    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, CICLO = 7, 
+    PREFIXO = 8, LIGACAO = 9, GRUPO_FUNCIONAL = 10, INT = 11, WHITESPACE = 12
+  };
 
-    explicit MolLexer(antlr4::CharStream *input);
+  explicit MolLexer(antlr4::CharStream *input);
 
-    ~MolLexer() override;
+  ~MolLexer() override;
 
-    std::string getGrammarFileName() const override;
 
-    const std::vector<std::string> &getRuleNames() const override;
+  std::string getGrammarFileName() const override;
 
-    const std::vector<std::string> &getChannelNames() const override;
+  const std::vector<std::string>& getRuleNames() const override;
 
-    const std::vector<std::string> &getModeNames() const override;
+  const std::vector<std::string>& getChannelNames() const override;
 
-    const antlr4::dfa::Vocabulary &getVocabulary() const override;
+  const std::vector<std::string>& getModeNames() const override;
 
-    antlr4::atn::SerializedATNView getSerializedATN() const override;
+  const antlr4::dfa::Vocabulary& getVocabulary() const override;
 
-    const antlr4::atn::ATN &getATN() const override;
+  antlr4::atn::SerializedATNView getSerializedATN() const override;
 
-    // By default the static state used to implement the lexer is lazily
-    // initialized during the first call to the constructor. You can call this
-    // function if you wish to initialize the static state ahead of time.
-    static void initialize();
+  const antlr4::atn::ATN& getATN() const override;
+
+  // By default the static state used to implement the lexer is lazily initialized during the first
+  // call to the constructor. You can call this function if you wish to initialize the static state
+  // ahead of time.
+  static void initialize();
 
 private:
-    // Individual action functions triggered by action() above.
 
-    // Individual semantic predicate functions triggered by sempred() above.
+  // Individual action functions triggered by action() above.
+
+  // Individual semantic predicate functions triggered by sempred() above.
+
 };
+

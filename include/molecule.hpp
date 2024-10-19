@@ -37,6 +37,8 @@ public:
     /// @brief Add a hydrogen to the molecule
     /// @return added hydrogen
     std::shared_ptr<Atom> add_hydrogen();
+    std::shared_ptr<Atom> add_nitrogen();
+    std::shared_ptr<Atom> add_oxygen();
     /// @brief Adds a bond to the scene between the two provided atoms
     /// @param a_idx first atom index
     /// @param b_idx second atom index
@@ -52,11 +54,11 @@ public:
     /// @brief Checks if an atom at the provided index can be deleted
     /// @param idx atom index
     /// @return true if the atom can be deleted, false otherwise
-    bool can_delete_atom_at(const size_t idx) const;
+    bool can_delete_atom_at(const std::size_t idx) const;
     /// @brief Deletes an atom at the provided index
     /// @param idx atom index
     /// @return true if the atom was deleted, false otherwise
-    bool delete_atom_at(const size_t idx);
+    bool delete_atom_at(const std::size_t idx);
 
     void bind_shader(std::shared_ptr<axolote::gl::Shader> shader) override;
     std::vector<std::shared_ptr<axolote::gl::Shader>>

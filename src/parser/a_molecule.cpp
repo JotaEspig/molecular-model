@@ -8,19 +8,10 @@ namespace parser {
 Atom::Atom() :
   name{""} {
 }
-Atom::Atom(string name) :
-  name{name} {
+Atom::Atom(string name, int pos) :
+  name{name},
+  pos{pos} {
 }
-
-Atom Atom::carbon() {
-    Atom c("C");
-    return c;
-}
-Atom Atom::hidroxila() {
-    Atom c("OH");
-    return c;
-}
-
 Cadeia::Cadeia() :
   n{0},
   tipo{CadeiaTipo::Aberta},
@@ -70,6 +61,11 @@ vector<Bond1> Cadeia::get_bonds(int start) {
 
         Bond1 bond = {pos1, pos2, bond_type};
 
+        bonds.push_back(bond);
+    }
+
+    if (tipo == CadeiaTipo::Ciclica) {
+        Bond1 bond = {0, n - 1, 1};
         bonds.push_back(bond);
     }
 
@@ -148,14 +144,19 @@ void Molecule::add_insaturacao(int pos, string tipo) {
 
     insaturacoes.push_back(i);
 }
-void Molecule::set_grupo_funcional(string grupo) {
-    Atom grupo_fun;
-    if (grupo == "o")
-        grupo_fun = Atom::carbon();
-    else if (grupo == "ol")
-        grupo_fun = Atom::hidroxila();
+void Molecule::add_grupo_funcional(int pos, string grupo) {
+    Atom grupo_fun(grupo, pos);
 
-    grupo_funcional = grupo_fun;
+    grupo_funcional.push_back(grupo_fun);
+}
+
+vector<pair<string, int>> Molecule::get_grupo_funcional() {
+    vector<pair<string, int>> grupos;
+    for (auto grupo : grupo_funcional) {
+        grupos.push_back(make_pair(grupo.name, grupo.pos));
+    }
+
+    return grupos;
 }
 
 void Molecule::print() {

@@ -13,11 +13,10 @@ namespace parser {
 class Atom {
 public:
     std::string name;
+    int pos;
 
     Atom();
-    Atom(std::string name);
-    static Atom carbon();
-    static Atom hidroxila();
+    Atom(std::string name, int pos);
 };
 
 class Bond {
@@ -64,7 +63,7 @@ public:
     std::string name;
 
     Cadeia cadeia_principal;
-    Atom grupo_funcional;
+    std::vector<Atom> grupo_funcional;
     std::vector<Cadeia> substituentes;
     std::vector<Insaturacao> insaturacoes;
 
@@ -73,7 +72,8 @@ public:
     void set_cadeia_principal(std::string prefix, CadeiaTipo tipo);
     void add_substituente(int pos, std::string prefix);
     void add_insaturacao(int pos, std::string tipo);
-    void set_grupo_funcional(std::string grupo);
+    void add_grupo_funcional(int pos, std::string grupo);
+    std::vector<std::pair<std::string, int>> get_grupo_funcional();
 
     void print();
 };

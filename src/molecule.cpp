@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -15,6 +16,18 @@
 #include <openbabel/obmolecformat.h>
 
 #include "molecule.hpp"
+
+const std::unordered_map<int, int> atomic_num_to_atomic_radius
+    = {{1, 25}, {6, 70}, {7, 65}, {8, 60}};
+const int max_atomic_radius = 70;
+const int min_atomic_radius = 25;
+
+float normalize_atomic_radius(int atomic_radius) {
+    float radius = static_cast<float>(atomic_radius - min_atomic_radius)
+                   / static_cast<float>(max_atomic_radius - min_atomic_radius);
+    // std::cout << radius << std::endl;
+    return radius;
+}
 
 Molecule::Molecule() :
   Molecule{glm::vec3{0.0f}} {
@@ -42,11 +55,18 @@ std::shared_ptr<Atom> Molecule::add_atom(int atomic_num) {
     else if (atomic_num == 1) {
         return add_hydrogen();
     }
+    else if (atomic_num == 7) {
+        return add_nitrogen();
+    }
+    else if (atomic_num == 8) {
+        return add_oxygen();
+    }
     return nullptr;
 }
 
 std::shared_ptr<Atom> Molecule::add_carbon() {
-    const float carbon_radius = 1.0f;
+    const float carbon_radius
+        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(6));
     auto carbon = std::make_shared<Atom>(glm::vec4{0.3f, 0.3f, 0.3f, 1.0f});
     carbon->radius = carbon_radius;
     carbon->is_affected_by_lights = true;
@@ -59,7 +79,8 @@ std::shared_ptr<Atom> Molecule::add_carbon() {
 }
 
 std::shared_ptr<Atom> Molecule::add_hydrogen() {
-    const float hydrogen_radius = 0.5f;
+    const float hydrogen_radius
+        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(1));
     auto hydrogen = std::make_shared<Atom>(glm::vec4{0.4f, 0.8f, 1.0f, 1.0f});
     hydrogen->radius = hydrogen_radius;
     hydrogen->is_affected_by_lights = true;
@@ -70,6 +91,34 @@ std::shared_ptr<Atom> Molecule::add_hydrogen() {
     openbabel_obj.SetHydrogensAdded(true);
 
     return hydrogen;
+}
+
+std::shared_ptr<Atom> Molecule::add_nitrogen() {
+    const float nitrogen_radius
+        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(7));
+    auto nitrogen = std::make_shared<Atom>(glm::vec4{0.0f, 0.0f, 1.0f, 1.0f});
+    nitrogen->radius = nitrogen_radius;
+    nitrogen->is_affected_by_lights = true;
+    atoms.push_back(nitrogen);
+
+    auto ob_nitrogen = openbabel_obj.NewAtom();
+    ob_nitrogen->SetAtomicNum(7);
+
+    return nitrogen;
+}
+
+std::shared_ptr<Atom> Molecule::add_oxygen() {
+    const float oxygen_radius
+        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(8));
+    auto oxygen = std::make_shared<Atom>(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
+    oxygen->radius = oxygen_radius;
+    oxygen->is_affected_by_lights = true;
+    atoms.push_back(oxygen);
+
+    auto ob_oxygen = openbabel_obj.NewAtom();
+    ob_oxygen->SetAtomicNum(8);
+
+    return oxygen;
 }
 
 std::shared_ptr<Bond> Molecule::add_bond(
@@ -144,13 +193,14 @@ void Molecule::calculate_positions() {
     }
 }
 
-bool Molecule::can_delete_atom_at(const size_t idx) const {
+bool Molecule::can_delete_atom_at(const std::size_t idx) const {
     auto atom = openbabel_obj.GetAtom(idx + 1);
     if (atom->GetAtomicNum() == 1) {
         return true;
     }
-    // Verifies if the atoms has 2 or more bonds to others non-hydrogen atoms
-    size_t counter = 0;
+    // Verifies if the atoms has 2 or more bonds to others non-hydrogen
+    // atoms
+    std::size_t counter = 0;
     OpenBabel::OBBondIterator bond_it;
     for (auto bond = atom->BeginBond(bond_it); bond;
          bond = atom->NextBond(bond_it)) {
@@ -165,14 +215,14 @@ bool Molecule::can_delete_atom_at(const size_t idx) const {
     return counter < 2;
 }
 
-bool Molecule::delete_atom_at(const size_t idx) {
+bool Molecule::delete_atom_at(const std::size_t idx) {
     if (!can_delete_atom_at(idx)) {
         return false;
     }
 
     auto ob_atom = openbabel_obj.GetAtom(idx + 1);
     if (ob_atom->GetAtomicNum() == 1) {
-        for (size_t i = 0; i < bonds.size(); ++i) {
+        for (std::size_t i = 0; i < bonds.size(); ++i) {
             auto atom = atoms[idx];
             auto bond = bonds[i];
             if (bond->a() == atom || bond->b() == atom) {
