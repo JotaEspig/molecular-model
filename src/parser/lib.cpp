@@ -90,7 +90,24 @@ public:
     }
 };
 
+string replace_usual_names(string iupac_molecule) {
+    unordered_map<string, string> usual_names
+        = {{"benzeno", "ciclohex-1,3,5-eno"}};
+
+    for (auto [key, value] : usual_names) {
+        const int start = iupac_molecule.find(key);
+        if (start == string::npos)
+            continue;
+        iupac_molecule.replace(start, key.size(), value);
+    }
+
+    return iupac_molecule;
+}
+
 Molecule parse(string iupac_molecule) {
+
+    iupac_molecule = replace_usual_names(iupac_molecule);
+
     antlr4::ANTLRInputStream input(iupac_molecule);
     MolLexer lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
