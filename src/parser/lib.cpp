@@ -36,8 +36,13 @@ public:
         string prefix = ctx->cadeia()->PREFIXO()->getText();
 
         for (auto pos_token : ctx->pos()->INT()) {
+
+            bool is_N = false;
+            if (ctx->N())
+                is_N = true;
+
             int pos = stoi(pos_token->getText());
-            m.add_substituente(pos, prefix);
+            m.add_substituente(pos, prefix, is_N);
         }
     }
     virtual void exitRamificacao(MolParser::RamificacaoContext *ctx) override {

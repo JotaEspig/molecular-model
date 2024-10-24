@@ -3,7 +3,7 @@ grammar Mol;
 molecula    : ramificacao* cadeia insaturacao grupo_funcional EOF;
 
 cadeia: CICLO? PREFIXO;
-ramificacao           : ('-'? pos '-' numero?)? cadeia 'il' '-'?;
+ramificacao           : (N? '-'? pos '-' numero?)? cadeia 'il' '-'?;
 insaturacao           : ('-' pos '-' numero?)? (LIGACAO);
 grupo_funcional       : ('-' pos '-' numero?)? GRUPO_FUNCIONAL;
 
@@ -11,6 +11,8 @@ numero      : 'di' | 'tri' | 'tetra';
 pos         : (INT ',')* INT;
 
 CICLO : 'ciclo';
+
+N : 'N';
 
 PREFIXO : 
    'met'

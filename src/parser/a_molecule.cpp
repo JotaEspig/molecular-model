@@ -128,11 +128,14 @@ void Molecule::set_cadeia_principal(string prefix, CadeiaTipo tipo) {
     cadeia_principal = Cadeia(n, tipo);
 }
 
-void Molecule::add_substituente(int pos, string prefix) {
+void Molecule::add_substituente(int pos, string prefix, bool is_N) {
     int n = prefixo(prefix);
 
     Cadeia c(n, CadeiaTipo::Aberta, pos);
-    substituentes.push_back(c);
+    if (is_N)
+        grupo_funcional_cadeia.push_back(c);
+    else
+        substituentes.push_back(c);
 }
 
 void Molecule::add_insaturacao(int pos, string tipo) {

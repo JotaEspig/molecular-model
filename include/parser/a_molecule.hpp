@@ -65,12 +65,13 @@ public:
     Cadeia cadeia_principal;
     std::vector<Atom> grupo_funcional;
     std::vector<Cadeia> substituentes;
+    std::vector<Cadeia> grupo_funcional_cadeia;
     std::vector<Insaturacao> insaturacoes;
 
     Molecule(std::string name);
     int prefixo(std::string n);
     void set_cadeia_principal(std::string prefix, CadeiaTipo tipo);
-    void add_substituente(int pos, std::string prefix);
+    void add_substituente(int pos, std::string prefix, bool is_N);
     void add_insaturacao(int pos, std::string tipo);
     void add_grupo_funcional(int pos, std::string grupo);
     std::vector<std::pair<std::string, int>> get_grupo_funcional();
