@@ -177,6 +177,20 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         m2.bonds.push_back(bond);
     }
 
+    auto grupo_cadeias = m.grupo_funcional_cadeia;
+    int grupo_pos = m2.atoms.size() - 1;
+    for (auto cadeia : grupo_cadeias) {
+
+        vector<int> atoms = cadeia.get_atoms();
+        for (auto atom : atoms)
+            m2.atoms.push_back(atom);
+
+        vector<Bond1> bonds = cadeia.get_bonds(grupo_pos + 1);
+        bonds[0].i = grupo_pos;
+
+        m2.bonds.insert(m2.bonds.end(), bonds.begin(), bonds.end());
+    }
+
     // add missing hydrogens to each carbon
     vector<int> temp_carbons(m2.atoms.size(), 4);
     for (int i = 0; i < m2.atoms.size(); ++i) {
