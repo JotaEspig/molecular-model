@@ -33,16 +33,28 @@ public:
 
     virtual void enterRamificacao(MolParser::RamificacaoContext *ctx) override {
         is_ramificacao = true;
-        string prefix = ctx->cadeia()->PREFIXO()->getText();
 
-        for (auto pos_token : ctx->pos()->INT()) {
+        bool is_N = false;
+        if (ctx->localizador()->pos()->N()) {
+            is_N = true;
+            string prefix = ctx->cadeia()->PREFIXO()->getText();
+            m.add_substituente(1, prefix, is_N);
+        }
+        is_N = false;
 
-            bool is_N = false;
-            if (ctx->N())
-                is_N = true;
+        for (auto pos_token : ctx->localizador()->pos()->INT()) {
 
             int pos = stoi(pos_token->getText());
-            m.add_substituente(pos, prefix, is_N);
+            if (ctx->nome_especial()) {
+
+                string special_name = ctx->nome_especial()->getText();
+                m.add_substituente_especial(pos, special_name);
+            }
+            else {
+
+                string prefix = ctx->cadeia()->PREFIXO()->getText();
+                m.add_substituente(pos, prefix, is_N);
+            }
         }
     }
     virtual void exitRamificacao(MolParser::RamificacaoContext *ctx) override {
@@ -51,8 +63,8 @@ public:
 
     virtual void enterInsaturacao(MolParser::InsaturacaoContext *ctx) override {
         string licacao = ctx->LIGACAO()->getText();
-        if (ctx->pos()) {
-            for (auto localizador : ctx->pos()->INT()) {
+        if (ctx->localizador()) {
+            for (auto localizador : ctx->localizador()->pos()->INT()) {
                 int pos = stoi(localizador->getText());
                 m.add_insaturacao(pos, licacao);
             }
@@ -64,15 +76,30 @@ public:
     virtual void enterGrupo_funcional(MolParser::Grupo_funcionalContext *ctx
     ) override {
         string grupo_funcional = ctx->GRUPO_FUNCIONAL()->getText();
-        if (ctx->pos()) {
-            for (auto localizador : ctx->pos()->INT()) {
+        if (ctx->localizador()) {
+            for (auto localizador : ctx->localizador()->pos()->INT()) {
                 int pos = stoi(localizador->getText());
                 m.add_grupo_funcional(pos, grupo_funcional);
             }
         }
+        else
+            m.add_grupo_funcional(1, grupo_funcional);
     }
     virtual void exitGrupo_funcional(MolParser::Grupo_funcionalContext *ctx
     ) override {
+    }
+    virtual void
+    enterLocalizador(MolParser::LocalizadorContext * /*ctx*/) override {
+    }
+    virtual void
+    exitLocalizador(MolParser::LocalizadorContext * /*ctx*/) override {
+    }
+
+    virtual void
+    enterNome_especial(MolParser::Nome_especialContext * /*ctx*/) override {
+    }
+    virtual void
+    exitNome_especial(MolParser::Nome_especialContext * /*ctx*/) override {
     }
 
     virtual void enterNumero(MolParser::NumeroContext *ctx) override {
@@ -159,6 +186,7 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         string name = grupo.first;
         int pos = grupo.second;
 
+        const int hydrogen = 1;
         const int nitrogen = 7;
         const int oxygen = 8;
         int atomic_number;
@@ -166,15 +194,24 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
             atomic_number = nitrogen;
         else if (name == "ona")
             atomic_number = oxygen;
+        else if (name == "ol")
+            atomic_number = oxygen;
         else if (name == "o")
             continue;
 
+        if (name == "ol")
+            m2.atoms.push_back(hydrogen);
         m2.atoms.push_back(atomic_number);
+
         int bond_type = 1;
         if (name == "ona")
             bond_type = 2;
         Bond1 bond = {pos - 1, m2.atoms.size() - 1, bond_type};
         m2.bonds.push_back(bond);
+        if (name == "ol") {
+            Bond1 bond2 = {m2.atoms.size() - 1, m2.atoms.size() - 2, bond_type};
+            m2.bonds.push_back(bond2);
+        }
     }
 
     auto grupo_cadeias = m.grupo_funcional_cadeia;
@@ -195,10 +232,14 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
     vector<int> temp_carbons(m2.atoms.size(), 4);
     for (int i = 0; i < m2.atoms.size(); ++i) {
         const int atomic_number = m2.atoms[i];
+        const int HYDROGEN = 1;
         const int CARBON = 6;
         const int NITROGEN = 7;
         const int OXYGEN = 8;
         switch (atomic_number) {
+        case HYDROGEN:
+            temp_carbons[i] = 0;
+            break;
         case CARBON:
             temp_carbons[i] = 4;
             break;

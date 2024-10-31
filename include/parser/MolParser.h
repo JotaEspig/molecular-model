@@ -12,13 +12,15 @@
 class  MolParser : public antlr4::Parser {
 public:
   enum {
-    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, CICLO = 7, 
-    N = 8, PREFIXO = 9, LIGACAO = 10, GRUPO_FUNCIONAL = 11, INT = 12, WHITESPACE = 13
+    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
+    CICLO = 8, N = 9, PREFIXO = 10, LIGACAO = 11, GRUPO_FUNCIONAL = 12, 
+    INT = 13, WHITESPACE = 14
   };
 
   enum {
     RuleMolecula = 0, RuleCadeia = 1, RuleRamificacao = 2, RuleInsaturacao = 3, 
-    RuleGrupo_funcional = 4, RuleNumero = 5, RulePos = 6
+    RuleGrupo_funcional = 4, RuleLocalizador = 5, RuleNome_especial = 6, 
+    RuleNumero = 7, RulePos = 8
   };
 
   explicit MolParser(antlr4::TokenStream *input);
@@ -43,6 +45,8 @@ public:
   class RamificacaoContext;
   class InsaturacaoContext;
   class Grupo_funcionalContext;
+  class LocalizadorContext;
+  class Nome_especialContext;
   class NumeroContext;
   class PosContext; 
 
@@ -53,7 +57,6 @@ public:
     CadeiaContext *cadeia();
     InsaturacaoContext *insaturacao();
     Grupo_funcionalContext *grupo_funcional();
-    antlr4::tree::TerminalNode *EOF();
     std::vector<RamificacaoContext *> ramificacao();
     RamificacaoContext* ramificacao(size_t i);
 
@@ -82,10 +85,9 @@ public:
   public:
     RamificacaoContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    Nome_especialContext *nome_especial();
+    LocalizadorContext *localizador();
     CadeiaContext *cadeia();
-    PosContext *pos();
-    antlr4::tree::TerminalNode *N();
-    NumeroContext *numero();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -99,8 +101,7 @@ public:
     InsaturacaoContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *LIGACAO();
-    PosContext *pos();
-    NumeroContext *numero();
+    LocalizadorContext *localizador();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -114,6 +115,19 @@ public:
     Grupo_funcionalContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *GRUPO_FUNCIONAL();
+    LocalizadorContext *localizador();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  Grupo_funcionalContext* grupo_funcional();
+
+  class  LocalizadorContext : public antlr4::ParserRuleContext {
+  public:
+    LocalizadorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
     PosContext *pos();
     NumeroContext *numero();
 
@@ -122,7 +136,19 @@ public:
    
   };
 
-  Grupo_funcionalContext* grupo_funcional();
+  LocalizadorContext* localizador();
+
+  class  Nome_especialContext : public antlr4::ParserRuleContext {
+  public:
+    Nome_especialContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  Nome_especialContext* nome_especial();
 
   class  NumeroContext : public antlr4::ParserRuleContext {
   public:
@@ -142,6 +168,7 @@ public:
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> INT();
     antlr4::tree::TerminalNode* INT(size_t i);
+    antlr4::tree::TerminalNode *N();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

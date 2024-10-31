@@ -3,12 +3,15 @@ grammar Mol;
 molecula    : ramificacao* cadeia insaturacao grupo_funcional EOF;
 
 cadeia: CICLO? PREFIXO;
-ramificacao           : (N? '-'? pos '-' numero?)? cadeia 'il' '-'?;
-insaturacao           : ('-' pos '-' numero?)? (LIGACAO);
-grupo_funcional       : ('-' pos '-' numero?)? GRUPO_FUNCIONAL;
+ramificacao           : localizador? ((cadeia 'il') | nome_especial) '-'?;
+insaturacao           : localizador? (LIGACAO);
+grupo_funcional       : localizador? GRUPO_FUNCIONAL;
+
+localizador : ( '-'? pos '-' numero?);
+nome_especial : 'fenil';
 
 numero      : 'di' | 'tri' | 'tetra';
-pos         : (INT ',')* INT;
+pos         : ((INT ',')* INT) | N;
 
 CICLO : 'ciclo';
 
@@ -31,7 +34,7 @@ LIGACAO :
  | 'en'
  | 'in';
 
-GRUPO_FUNCIONAL : 'o' | 'ona' | 'amina';
+GRUPO_FUNCIONAL : 'o' | 'ona' | 'amina' | 'ol';
 
 INT        : [0-9]+ ;
 WHITESPACE : ' ' -> skip;

@@ -29,7 +29,7 @@ public:
     Bond &add(int a, int i);
     std::string show();
 };
-enum class CadeiaTipo { Aberta, Ciclica, Aromatica };
+enum class CadeiaTipo { Aberta, Ciclica, Aromatica, Fenila };
 class Cadeia {
 public:
     int n;
@@ -72,6 +72,7 @@ public:
     int prefixo(std::string n);
     void set_cadeia_principal(std::string prefix, CadeiaTipo tipo);
     void add_substituente(int pos, std::string prefix, bool is_N);
+    void add_substituente_especial(int pos, std::string nome);
     void add_insaturacao(int pos, std::string tipo);
     void add_grupo_funcional(int pos, std::string grupo);
     std::vector<std::pair<std::string, int>> get_grupo_funcional();

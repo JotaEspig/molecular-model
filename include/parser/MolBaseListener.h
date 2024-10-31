@@ -31,6 +31,12 @@ public:
   virtual void enterGrupo_funcional(MolParser::Grupo_funcionalContext * /*ctx*/) override { }
   virtual void exitGrupo_funcional(MolParser::Grupo_funcionalContext * /*ctx*/) override { }
 
+  virtual void enterLocalizador(MolParser::LocalizadorContext * /*ctx*/) override { }
+  virtual void exitLocalizador(MolParser::LocalizadorContext * /*ctx*/) override { }
+
+  virtual void enterNome_especial(MolParser::Nome_especialContext * /*ctx*/) override { }
+  virtual void exitNome_especial(MolParser::Nome_especialContext * /*ctx*/) override { }
+
   virtual void enterNumero(MolParser::NumeroContext * /*ctx*/) override { }
   virtual void exitNumero(MolParser::NumeroContext * /*ctx*/) override { }
 

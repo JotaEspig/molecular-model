@@ -29,6 +29,12 @@ public:
   virtual void enterGrupo_funcional(MolParser::Grupo_funcionalContext *ctx) = 0;
   virtual void exitGrupo_funcional(MolParser::Grupo_funcionalContext *ctx) = 0;
 
+  virtual void enterLocalizador(MolParser::LocalizadorContext *ctx) = 0;
+  virtual void exitLocalizador(MolParser::LocalizadorContext *ctx) = 0;
+
+  virtual void enterNome_especial(MolParser::Nome_especialContext *ctx) = 0;
+  virtual void exitNome_especial(MolParser::Nome_especialContext *ctx) = 0;
+
   virtual void enterNumero(MolParser::NumeroContext *ctx) = 0;
   virtual void exitNumero(MolParser::NumeroContext *ctx) = 0;
 

@@ -49,6 +49,18 @@ vector<int> Cadeia::get_atoms() {
 }
 
 vector<Bond1> Cadeia::get_bonds(int start) {
+
+    if (tipo == CadeiaTipo::Fenila) {
+
+        vector<Bond1> fenil_bonds = {
+            {pos - 1, start, 1},       {start + 0, start + 1, 2},
+            {start + 1, start + 2, 1}, {start + 2, start + 3, 2},
+            {start + 3, start + 4, 1}, {start + 4, start + 5, 2},
+            {start + 5, start + 0, 1},
+        };
+        return fenil_bonds;
+    }
+
     vector<Bond1> bonds;
     if (pos != 0)
         bonds.push_back({pos - 1, start, 1});
@@ -136,6 +148,13 @@ void Molecule::add_substituente(int pos, string prefix, bool is_N) {
         grupo_funcional_cadeia.push_back(c);
     else
         substituentes.push_back(c);
+}
+
+void Molecule::add_substituente_especial(int pos, string nome) {
+    Cadeia fenil(6, CadeiaTipo::Fenila, pos);
+    if (nome == "fenil") {
+        substituentes.push_back(fenil);
+    }
 }
 
 void Molecule::add_insaturacao(int pos, string tipo) {
