@@ -80,7 +80,7 @@ std::shared_ptr<Atom> Molecule::add_carbon() {
 
 std::shared_ptr<Atom> Molecule::add_hydrogen() {
     const float hydrogen_radius
-        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(1));
+        = normalize_atomic_radius(atomic_num_to_atomic_radius.at(1)) + 0.5;
     auto hydrogen = std::make_shared<Atom>(glm::vec4{0.4f, 0.8f, 1.0f, 1.0f});
     hydrogen->radius = hydrogen_radius;
     hydrogen->is_affected_by_lights = true;
@@ -187,7 +187,11 @@ void Molecule::calculate_positions() {
         glm::mat4 mat = atom->get_matrix();
         mat = glm::translate(mat, -mean_center);
         mat = glm::scale(
-            mat, glm::vec3{ob_atom->GetAtomicNum() == 1 ? 0.6f : 1.0f}
+            mat,
+            glm::vec3{
+                atom->radius
+                /*ob_atom->GetAtomicNum() == 1 ? 0.6f : 1.0f*/
+            }
         );
         atom->set_matrix(mat);
     }

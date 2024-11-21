@@ -43,7 +43,6 @@ void App::process_input(double dt) {
         lat += speed * move_speed * dt;
     if (get_key_state(Key::LEFT_SHIFT) == KeyState::PRESSED)
         lat -= speed * move_speed * dt;
-
     if (get_mouse_key_state(MouseKey::RIGHT) == MouseKeyState::PRESSED) {
         set_cursor_mode(CursorMode::DISABLED);
 
@@ -258,14 +257,18 @@ void App::im_gui_operations() {
     ImGui::SetNextWindowSize(ImVec2(280, 100), ImGuiCond_FirstUseEver);
     ImGui::Begin("Nome da molécula");
 
-    static const char *compounds[]{"", "Metanfetamina", "Alcool Etilico"};
+    static const char *compounds[]{
+        "", "Frangonona", "Metanfetamina", "Alcool Etilico", "Aroma de Canela"
+    };
     static int current_compound = 0;
     if (ImGui::Combo(
             "Composto", &current_compound, compounds, IM_ARRAYSIZE(compounds)
         )) {
         std::unordered_map<std::string, std::string> compound_map{
+            {"Frangonona", "2,6-dietil-3,5-dimetil-ciclohexanona"},
             {"Metanfetamina", "N-metil-1-fenil-propan-2-amina"},
-            {"Alcool Etilico", "etanol"}
+            {"Alcool Etilico", "etanol"},
+            {"Aroma de Canela", "3-fenil-prop-2-enal"}
         };
         if (current_compound != 0) {
             char *new_mol_name

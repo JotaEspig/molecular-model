@@ -7,7 +7,6 @@
 
 std::shared_ptr<axolote::GModel> Atom::_gmodel = nullptr;
 std::shared_ptr<axolote::gl::Shader> Atom::_shader = nullptr;
-
 Atom::Atom() :
   Atom(glm::vec4{1.0f}) {
 }

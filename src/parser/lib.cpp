@@ -189,6 +189,7 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         const int hydrogen = 1;
         const int nitrogen = 7;
         const int oxygen = 8;
+        const int carbon = 6;
         int atomic_number;
         if (name == "amina")
             atomic_number = nitrogen;
@@ -196,11 +197,18 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
             atomic_number = oxygen;
         else if (name == "ol")
             atomic_number = oxygen;
+        else if (name == "al")
+            atomic_number = carbon;
         else if (name == "o")
             continue;
 
         if (name == "ol")
             m2.atoms.push_back(hydrogen);
+        if (name == "al") {
+            m2.atoms.push_back(hydrogen);
+            m2.atoms.push_back(oxygen);
+        }
+
         m2.atoms.push_back(atomic_number);
 
         int bond_type = 1;
@@ -211,6 +219,14 @@ Molecule1 Molecule1_from_Molecule(Molecule m) {
         if (name == "ol") {
             Bond1 bond2 = {m2.atoms.size() - 1, m2.atoms.size() - 2, bond_type};
             m2.bonds.push_back(bond2);
+        }
+
+        if (name == "al") {
+
+            Bond1 bond2 = {m2.atoms.size() - 1, m2.atoms.size() - 2, 2};
+            m2.bonds.push_back(bond2);
+            Bond1 bond3 = {m2.atoms.size() - 1, m2.atoms.size() - 3, 1};
+            m2.bonds.push_back(bond3);
         }
     }
 
