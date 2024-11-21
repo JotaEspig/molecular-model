@@ -255,8 +255,26 @@ void App::im_gui_operations() {
     ImGui::NewFrame();
 
     // Set Frame size for ImGui
-    ImGui::SetNextWindowSize(ImVec2(280, 80), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(280, 100), ImGuiCond_FirstUseEver);
     ImGui::Begin("Nome da molécula");
+
+    static const char *compounds[]{"", "Metanfetamina", "Alcool Etilico"};
+    static int current_compound = 0;
+    if (ImGui::Combo(
+            "Composto", &current_compound, compounds, IM_ARRAYSIZE(compounds)
+        )) {
+        std::unordered_map<std::string, std::string> compound_map{
+            {"Metanfetamina", "N-metil-1-fenil-propan-2-amina"},
+            {"Alcool Etilico", "etanol"}
+        };
+        if (current_compound != 0) {
+            char *new_mol_name
+                = (char *)compound_map[compounds[current_compound]].c_str();
+            strncpy(mol_name, new_mol_name, 100);
+            recreate_molecule_by_name(mol_name);
+        }
+    }
+
     ImGui::InputText("Nome", mol_name, 100);
     if (!ImGui::IsPopupOpen("Falha ao deletar")) {
         if (ImGui::Button("Gerar")) {
