@@ -57,6 +57,7 @@ public:
     CadeiaContext *cadeia();
     InsaturacaoContext *insaturacao();
     Grupo_funcionalContext *grupo_funcional();
+    antlr4::tree::TerminalNode *EOF();
     std::vector<RamificacaoContext *> ramificacao();
     RamificacaoContext* ramificacao(size_t i);
 

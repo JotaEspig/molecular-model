@@ -34,7 +34,7 @@ LIGACAO :
  | 'en'
  | 'in';
 
-GRUPO_FUNCIONAL : 'o' | 'ona' | 'amina' | 'ol';
+GRUPO_FUNCIONAL : 'o' | 'ona' | 'amina' | 'ol' | 'al';
 
 INT        : [0-9]+ ;
 WHITESPACE : ' ' -> skip;
