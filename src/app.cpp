@@ -1,15 +1,12 @@
 #include <algorithm>
 #include <vector>
 
-#include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <cairo/cairo.h>
-#include <glm/gtx/string_cast.hpp>
 #include <librsvg/rsvg.h>
-#include <openbabel/bond.h>
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
 #include <openbabel/op.h>
@@ -23,6 +20,8 @@
 #include "atom.hpp"
 #include "molecule.hpp"
 #include "parser/lib.hpp"
+
+#define UPSCALING_FACTOR 4
 
 #ifdef _WIN32
 double clamp(double value, double min, double max) {
@@ -54,6 +53,10 @@ void convert_svg_to_png(
 
     double width, height;
     rsvg_handle_get_intrinsic_size_in_pixels(handle, &width, &height);
+
+    // Improves image quality
+    width *= UPSCALING_FACTOR;
+    height *= UPSCALING_FACTOR;
 
     cairo_surface_t *surface
         = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
