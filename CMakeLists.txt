@@ -33,6 +33,8 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
 find_package(Doxygen OPTIONAL_COMPONENTS dot)
 find_package(OpenBabel3 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBRSVG REQUIRED IMPORTED_TARGET librsvg-2.0)
 if (WIN32 OR MSVC)
     set(OpenBabel3_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/openbabel")
 endif ()
@@ -114,7 +116,7 @@ target_link_libraries(
     molecular-model
     PUBLIC
     axolote
-    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB} ${OpenBabel3_LIBRARIES} antlr4_shared
+    ${OPENGL_LIBRARIES} glfw ${ASSIMP_LIB} ${OpenBabel3_LIBRARIES} antlr4_shared PkgConfig::LIBRSVG
 )
 if (UNIX)
     target_link_libraries(molecular-model PUBLIC stdc++)
@@ -131,6 +133,7 @@ target_include_directories(
     ${ASSIMP_INCLUDE_DIRS}
     ${OpenBabel3_INCLUDE_DIRS}
     ${ANTLR4_INCLUDE_DIR}
+    PkgConfig::LIBRSVG
 )
 
 
