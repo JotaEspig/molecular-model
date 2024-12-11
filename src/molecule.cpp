@@ -25,7 +25,6 @@ const int min_atomic_radius = 25;
 float normalize_atomic_radius(int atomic_radius) {
     float radius = static_cast<float>(atomic_radius - min_atomic_radius)
                    / static_cast<float>(max_atomic_radius - min_atomic_radius);
-    // std::cout << radius << std::endl;
     return radius;
 }
 
@@ -183,14 +182,12 @@ void Molecule::calculate_positions() {
     // Center the molecule at the 0, 0, 0
     for (std::size_t i = 0; i < num_atoms; ++i) {
         auto &atom = atoms[i];
-        auto ob_atom = openbabel_obj.GetAtom(i + 1);
         glm::mat4 mat = atom->get_matrix();
         mat = glm::translate(mat, -mean_center);
         mat = glm::scale(
             mat,
             glm::vec3{
                 atom->radius
-                /*ob_atom->GetAtomicNum() == 1 ? 0.6f : 1.0f*/
             }
         );
         atom->set_matrix(mat);
