@@ -181,7 +181,7 @@ void App::main_loop() {
 
     scene->add_light(dir_light);
 
-    strncpy(mol_name, "metano", 100);
+    std::strncpy(mol_name, "metano", 100);
     auto parsed_mol = parser::parse(mol_name);
     auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
 
@@ -273,7 +273,7 @@ void App::im_gui_operations() {
         if (current_compound != 0) {
             char *new_mol_name
                 = (char *)compound_map[compounds[current_compound]].c_str();
-            strncpy(mol_name, new_mol_name, 100);
+            std::strncpy(mol_name, new_mol_name, 100);
         }
     }
 
