@@ -18,6 +18,7 @@ public:
     bool has_failed_to_delete = false;
 
     char mol_name[100];
+    std::shared_ptr<axolote::GMesh> image_2d;
     std::shared_ptr<Molecule> current_molecule = nullptr;
     std::shared_ptr<Atom> currently_highlighted = nullptr;
     std::shared_ptr<axolote::utils::Grid> grid;

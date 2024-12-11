@@ -1,14 +1,18 @@
 #include <algorithm>
+#include <vector>
 
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <cairo/cairo.h>
 #include <glm/gtx/string_cast.hpp>
+#include <librsvg/rsvg.h>
 #include <openbabel/bond.h>
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
+#include <openbabel/op.h>
 
 #include "axolote/scene.hpp"
 #define DEBUG
@@ -26,6 +30,46 @@ double clamp(double value, double min, double max) {
 }
 const float M_PIf = 3.14159265358979323846f;
 #endif
+
+std::vector<axolote::Vertex> image_2d_vertices{
+    {{-1.0f, -1.0f, 0.0f}, {}, {0.0f, 0.0f}, {}},
+    {{1.0f, -1.0f, 0.0f}, {}, {1.0f, 0.0f}, {}},
+    {{1.0f, 1.0f, 0.0f}, {}, {1.0f, 1.0f}, {}},
+    {{-1.0f, 1.0f, 0.0f}, {}, {0.0f, 1.0f}, {}}
+};
+std::vector<GLuint> image_2d_indices{0, 1, 2, 0, 2, 3};
+
+// Function to convert SVG to PNG using Cairo and librsvg
+void convert_svg_to_png(
+    const std::string &svg_content, const std::string &png_file
+) {
+    RsvgHandle *handle = rsvg_handle_new_from_data(
+        reinterpret_cast<const guint8 *>(svg_content.c_str()),
+        svg_content.size(), NULL
+    );
+    if (!handle) {
+        axolote::debug("Failed to create RsvgHandle from SVG content.");
+        return;
+    }
+
+    RsvgDimensionData dimensions;
+    rsvg_handle_get_dimensions(handle, &dimensions);
+
+    cairo_surface_t *surface = cairo_image_surface_create(
+        CAIRO_FORMAT_ARGB32, dimensions.width, dimensions.height
+    );
+    cairo_t *cr = cairo_create(surface);
+
+    if (!rsvg_handle_render_cairo(handle, cr)) {
+        axolote::debug("Failed to render SVG to Cairo surface.");
+    }
+
+    cairo_surface_write_to_png(surface, png_file.c_str());
+
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    g_object_unref(handle);
+}
 
 void App::process_input(double dt) {
     const float zoom_speed = 2.0f;
@@ -169,6 +213,19 @@ void App::main_loop() {
         get_path("resources/shaders/grid_base_fragment_shader.glsl")
     );
 
+    auto image_2d_shader = axolote::gl::Shader::create(
+        get_path("resources/shaders/image_2d_vertex_shader.glsl"),
+        get_path("resources/shaders/image_2d_fragment_shader.glsl")
+    );
+
+    // Quad
+    // Vertex has the struct {position, color, tex_uv, normal}
+    image_2d = std::make_shared<axolote::GMesh>(
+        image_2d_vertices, image_2d_indices,
+        std::vector<std::shared_ptr<axolote::gl::Texture>>{}
+    );
+    image_2d->bind_shader(image_2d_shader);
+
     auto scene = std::make_shared<axolote::Scene>();
     scene->camera.pos = {0.0f, 0.0f, 12.35f};
     scene->camera.speed = 3.0f;
@@ -181,14 +238,6 @@ void App::main_loop() {
 
     scene->add_light(dir_light);
 
-    std::strncpy(mol_name, "metano", 100);
-    auto parsed_mol = parser::parse(mol_name);
-    auto parsed_mol_processed = parser::Molecule1_from_Molecule(parsed_mol);
-
-    current_molecule = std::make_shared<Molecule>();
-    current_molecule->setup(parsed_mol_processed);
-    scene->add_drawable(current_molecule);
-
     grid = std::make_shared<axolote::utils::Grid>(
         70, 5, true, glm::vec4{1.0f, 0.0f, 0.0f, 1.0f}
     );
@@ -197,6 +246,10 @@ void App::main_loop() {
     scene->set_grid(grid);
 
     set_scene(scene);
+
+    std::strncpy(mol_name, "metano", 100);
+    recreate_molecule_by_name(mol_name);
+
     double last_time = get_time();
     int second_counter = 0;
     double accumulated_frames = 0;
@@ -224,6 +277,16 @@ void App::main_loop() {
         update(dt);
         render();
 
+        // Draw image 2d of molecule
+        {
+            auto shader = image_2d->get_shaders()[0];
+            shader->activate();
+            shader->set_uniform_float(
+                "image_2d_aspect_ratio", (float)width() / height()
+            );
+            image_2d->draw();
+        }
+
         im_gui_operations();
 
         flush();
@@ -246,6 +309,27 @@ void App::recreate_molecule_by_name(const char *mol_name) {
     new_scene->add_light(dir_light);
     new_scene->set_grid(grid);
     set_scene(new_scene);
+
+    // Create a 2D representation of the molecule
+    OpenBabel::OBMol obmol = current_molecule->openbabel_obj;
+    obmol.DeleteHydrogens();
+
+    OpenBabel::OBConversion conv;
+    OpenBabel::OBOp::FindType("gen2d")->Do(&obmol);
+    if (!conv.SetOutFormat("svg"))
+        axolote::debug("Failed to set output format for molecule");
+
+    std::string svg = conv.WriteString(&obmol);
+    if (svg.empty())
+        axolote::debug("Failed to convert molecule to SVG");
+
+    const std::string pngfile = "/tmp/molecule.png";
+    convert_svg_to_png(svg, pngfile);
+    axolote::debug("PNG file created at %s", pngfile.c_str());
+
+    auto tex = axolote::gl::Texture::create(pngfile, "diffure", (GLuint)0);
+    image_2d->textures.clear();
+    image_2d->textures.push_back(tex);
 }
 
 void App::im_gui_operations() {
