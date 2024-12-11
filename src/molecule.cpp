@@ -1,4 +1,5 @@
-#include <algorithm>
+#include <cstdio>
+#include <ctime>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -6,34 +7,92 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <cairo/cairo.h>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <librsvg/rsvg.h>
 #include <openbabel/bond.h>
 #include <openbabel/builder.h>
 #include <openbabel/forcefield.h>
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
 #include <openbabel/obmolecformat.h>
+#include <openbabel/op.h>
 
+#define DEBUG // Enables debug function
+#include "axolote/utils.hpp"
 #include "molecule.hpp"
+
+#define UPSCALING_FACTOR 4
+
+std::string Molecule::tmp_folder_for_tex_files = "/tmp/molecular_model/";
 
 const std::unordered_map<int, int> atomic_num_to_atomic_radius
     = {{1, 25}, {6, 70}, {7, 65}, {8, 60}};
 const int max_atomic_radius = 70;
 const int min_atomic_radius = 25;
-
 float normalize_atomic_radius(int atomic_radius) {
     float radius = static_cast<float>(atomic_radius - min_atomic_radius)
                    / static_cast<float>(max_atomic_radius - min_atomic_radius);
     return radius;
 }
 
+// Function to convert SVG to PNG using Cairo and librsvg
+void convert_svg_to_png(
+    const std::string &svg_content, const std::string &png_file
+) {
+    RsvgHandle *handle = rsvg_handle_new_from_data(
+        reinterpret_cast<const guint8 *>(svg_content.c_str()),
+        svg_content.size(), NULL
+    );
+    if (!handle) {
+        axolote::debug("Failed to create RsvgHandle from SVG content.");
+        return;
+    }
+
+    double width, height;
+    rsvg_handle_get_intrinsic_size_in_pixels(handle, &width, &height);
+
+    // Improves image quality
+    width *= UPSCALING_FACTOR;
+    height *= UPSCALING_FACTOR;
+
+    cairo_surface_t *surface
+        = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t *cr = cairo_create(surface);
+
+    GError *error = nullptr;
+    RsvgRectangle viewport = {0, 0, width, height};
+    if (!rsvg_handle_render_document(handle, cr, &viewport, &error))
+        axolote::debug("Failed to render SVG to Cairo surface.");
+
+    if (error) {
+        axolote::debug("Error rendering SVG: {}", error->message);
+        g_error_free(error);
+    }
+
+    cairo_status_t status
+        = cairo_surface_write_to_png(surface, png_file.c_str());
+    if (status == CAIRO_STATUS_SUCCESS) {
+        axolote::debug("PNG file created at %s", png_file.c_str());
+    }
+    else {
+        axolote::debug("Failed to write PNG file.");
+    }
+
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    g_object_unref(handle);
+}
+
 Molecule::Molecule() :
   Molecule{glm::vec3{0.0f}} {
+    generate_filename();
 }
 
 Molecule::Molecule(const glm::vec3 &center) :
   center{center} {
+    generate_filename();
 }
 
 void Molecule::setup(parser::Molecule1 &parsed_mol_processed) {
@@ -45,6 +104,36 @@ void Molecule::setup(parser::Molecule1 &parsed_mol_processed) {
     }
 
     calculate_positions();
+    generate_texture();
+}
+
+void Molecule::generate_texture() {
+    // Create a 2D representation of the molecule
+    OpenBabel::OBMol obmol = openbabel_obj;
+    obmol.DeleteHydrogens();
+
+    OpenBabel::OBConversion conv;
+    OpenBabel::OBOp::FindType("gen2d")->Do(&obmol);
+    if (!conv.SetOutFormat("svg"))
+        axolote::debug("Failed to set output format for molecule");
+
+    std::string svg = conv.WriteString(&obmol);
+    if (svg.empty())
+        axolote::debug("Failed to convert molecule to SVG");
+
+    convert_svg_to_png(svg, image_2d_tex_filename);
+
+    image_2d_tex = axolote::gl::Texture::create(
+        image_2d_tex_filename, "diffure", (GLuint)0
+    );
+}
+
+void Molecule::generate_filename() {
+    std::time_t t = std::time(nullptr);
+    char buffer[80];
+    std::strftime(buffer, 80, "%Y%m%d%H%M%S", std::localtime(&t));
+    image_2d_tex_filename
+        = tmp_folder_for_tex_files + std::string{buffer} + ".png";
 }
 
 std::shared_ptr<Atom> Molecule::add_atom(int atomic_num) {
@@ -184,12 +273,7 @@ void Molecule::calculate_positions() {
         auto &atom = atoms[i];
         glm::mat4 mat = atom->get_matrix();
         mat = glm::translate(mat, -mean_center);
-        mat = glm::scale(
-            mat,
-            glm::vec3{
-                atom->radius
-            }
-        );
+        mat = glm::scale(mat, glm::vec3{atom->radius});
         atom->set_matrix(mat);
     }
 }

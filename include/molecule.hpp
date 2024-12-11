@@ -15,7 +15,14 @@
 
 class Molecule : public axolote::Drawable {
 public:
+    /// @brief OpenBabel molecule object
     OpenBabel::OBMol openbabel_obj;
+    /// @brief filename used to save the molecule's 2D image texture
+    std::string image_2d_tex_filename;
+    /// @brief temporary folder used to save the molecule's 2D image texture
+    static std::string tmp_folder_for_tex_files;
+    /// @brief 2D image texture
+    std::shared_ptr<axolote::gl::Texture> image_2d_tex;
     /// @brief List of pairs [atom, model_mat]
     std::vector<std::shared_ptr<Atom>> atoms;
     /// @brief List of bonds
@@ -26,7 +33,13 @@ public:
     Molecule();
     Molecule(const glm::vec3 &center);
 
+    /// @brief Setup molecule from parsed molecule
+    /// @param parsed_mol_processed parsed molecule
     void setup(parser::Molecule1 &parsed_mol_processed);
+    /// @brief Generates the molecule 2D image texture
+    void generate_texture();
+    /// @brief Generates texture filename based on timestamp
+    void generate_filename();
     /// @brief Adds an atom to the molecule
     /// @param atomic_num atomic number
     /// @return added atom

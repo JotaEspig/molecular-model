@@ -5,14 +5,11 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <cairo/cairo.h>
-#include <librsvg/rsvg.h>
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
-#include <openbabel/op.h>
 
 #include "axolote/scene.hpp"
-#define DEBUG
+#define DEBUG // Enables debug function
 #include "axolote/utils.hpp"
 #include "axolote/utils/grid.hpp"
 
@@ -20,8 +17,6 @@
 #include "atom.hpp"
 #include "molecule.hpp"
 #include "parser/lib.hpp"
-
-#define UPSCALING_FACTOR 4
 
 #ifdef _WIN32
 double clamp(double value, double min, double max) {
@@ -37,42 +32,6 @@ std::vector<axolote::Vertex> image_2d_vertices{
     {{-1.0f, 1.0f, 0.0f}, {}, {0.0f, 1.0f}, {}}
 };
 std::vector<GLuint> image_2d_indices{0, 1, 2, 0, 2, 3};
-
-// Function to convert SVG to PNG using Cairo and librsvg
-void convert_svg_to_png(
-    const std::string &svg_content, const std::string &png_file
-) {
-    RsvgHandle *handle = rsvg_handle_new_from_data(
-        reinterpret_cast<const guint8 *>(svg_content.c_str()),
-        svg_content.size(), NULL
-    );
-    if (!handle) {
-        axolote::debug("Failed to create RsvgHandle from SVG content.");
-        return;
-    }
-
-    double width, height;
-    rsvg_handle_get_intrinsic_size_in_pixels(handle, &width, &height);
-
-    // Improves image quality
-    width *= UPSCALING_FACTOR;
-    height *= UPSCALING_FACTOR;
-
-    cairo_surface_t *surface
-        = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cairo_t *cr = cairo_create(surface);
-
-    GError *error = nullptr;
-    RsvgRectangle viewport = {0, 0, width, height};
-    if (!rsvg_handle_render_document(handle, cr, &viewport, &error))
-        axolote::debug("Failed to render SVG to Cairo surface.");
-
-    cairo_surface_write_to_png(surface, png_file.c_str());
-
-    cairo_destroy(cr);
-    cairo_surface_destroy(surface);
-    g_object_unref(handle);
-}
 
 void App::process_input(double dt) {
     const float zoom_speed = 2.0f;
@@ -193,6 +152,10 @@ void App::process_input(double dt) {
                 current_molecule->delete_atom_at(idx);
                 current_molecule->calculate_positions();
                 currently_highlighted = nullptr;
+
+                current_molecule->generate_texture();
+                image_2d->textures.clear();
+                image_2d->textures.push_back(current_molecule->image_2d_tex);
             }
             else {
                 has_failed_to_delete = true;
@@ -210,6 +173,9 @@ void App::main_loop() {
     _root_path = PROJECT_DIR;
     glfwSetWindowUserPointer(window(), this);
     set_color({0.1f, 0.1f, 0.1f, 0.5f});
+    // Mkdir for temporary files
+    std::string command = "mkdir -p " + Molecule::tmp_folder_for_tex_files;
+    system(command.c_str());
 
     auto grid_shader = axolote::gl::Shader::create(
         get_path("resources/shaders/grid_base_vertex_shader.glsl"),
@@ -313,26 +279,8 @@ void App::recreate_molecule_by_name(const char *mol_name) {
     new_scene->set_grid(grid);
     set_scene(new_scene);
 
-    // Create a 2D representation of the molecule
-    OpenBabel::OBMol obmol = current_molecule->openbabel_obj;
-    obmol.DeleteHydrogens();
-
-    OpenBabel::OBConversion conv;
-    OpenBabel::OBOp::FindType("gen2d")->Do(&obmol);
-    if (!conv.SetOutFormat("svg"))
-        axolote::debug("Failed to set output format for molecule");
-
-    std::string svg = conv.WriteString(&obmol);
-    if (svg.empty())
-        axolote::debug("Failed to convert molecule to SVG");
-
-    const std::string pngfile = "/tmp/molecule.png";
-    convert_svg_to_png(svg, pngfile);
-    axolote::debug("PNG file created at %s", pngfile.c_str());
-
-    auto tex = axolote::gl::Texture::create(pngfile, "diffure", (GLuint)0);
     image_2d->textures.clear();
-    image_2d->textures.push_back(tex);
+    image_2d->textures.push_back(current_molecule->image_2d_tex);
 }
 
 void App::im_gui_operations() {
