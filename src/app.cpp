@@ -274,7 +274,6 @@ void App::im_gui_operations() {
             char *new_mol_name
                 = (char *)compound_map[compounds[current_compound]].c_str();
             strncpy(mol_name, new_mol_name, 100);
-            recreate_molecule_by_name(mol_name);
         }
     }
 
