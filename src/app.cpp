@@ -52,17 +52,17 @@ void convert_svg_to_png(
         return;
     }
 
-    RsvgDimensionData dimensions;
-    rsvg_handle_get_dimensions(handle, &dimensions);
+    double width, height;
+    rsvg_handle_get_intrinsic_size_in_pixels(handle, &width, &height);
 
-    cairo_surface_t *surface = cairo_image_surface_create(
-        CAIRO_FORMAT_ARGB32, dimensions.width, dimensions.height
-    );
+    cairo_surface_t *surface
+        = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(surface);
 
-    if (!rsvg_handle_render_cairo(handle, cr)) {
+    GError *error = nullptr;
+    RsvgRectangle viewport = {0, 0, width, height};
+    if (!rsvg_handle_render_document(handle, cr, &viewport, &error))
         axolote::debug("Failed to render SVG to Cairo surface.");
-    }
 
     cairo_surface_write_to_png(surface, png_file.c_str());
 
