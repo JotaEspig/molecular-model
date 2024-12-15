@@ -4,7 +4,7 @@ A molecular model visualization tool. 3D and 2D visualization of molecules.
 
 ## Description
 
-This project is a molecular model visualization tool. It is programmed in C++ using OpenGL 3.3+ and GLSL 3.3+. It uses Axolote Engine, a self-made engine for OpenGL, take a look at the engine [https://github.com/JotaEspig/axolote-engine](https://github.com/JotaEspig/axolote-engine).
+This project is a molecular model visualization tool that uses the names of molecules in portuguese. It is programmed in C++ using OpenGL 3.3+ and GLSL 3.3+. It uses Axolote Engine, a self-made engine for OpenGL, take a look at the engine [https://github.com/JotaEspig/axolote-engine](https://github.com/JotaEspig/axolote-engine).
 
 The idea of the project came from the college subject "Computação na educação" (Computing in education), where we had to develop a software designed to help the area of education. We chose to develop a software that could help students to visualize molecules in 3D and 2D.
 
@@ -56,7 +56,7 @@ cd molecular-model
 
 Install Axolote Engine:
 ```bash
-git clone https://github.com/JotaEspig/axolote-engine
+git clone https://github.com/JotaEspig/axolote-engine -b v0.8.0
 cd axolote-engine
 bash install.sh ..
 cd ..
